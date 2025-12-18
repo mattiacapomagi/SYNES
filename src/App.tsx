@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import JSZip from 'jszip';
 import { UploadZone } from './components/UploadZone';
 import { ControlPanel } from './components/ControlPanel';
@@ -16,30 +16,132 @@ function App() {
   const [vizMode, setVizMode] = useState<'rgb' | 'bw' | 'r' | 'g' | 'b'>('rgb');
   const [params, setParams] = useState<GlitchParams>({
     displacement: 0,
-    chop: 0,
     noise: 0,
-    crush: 0,
-    seed: ''
+    seed: '',
+    bloomThreshold: 0.5,
+    bloomIntensity: 0,
+    bloomRadius: 0.24
   });
 
-  // Debounce ref
+  // Undo History
+  const [history, setHistory] = useState<GlitchParams[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  // Load initial params into history on mount (or first render) is tricky with strict mode/double mount
+  // Simpler: Just push to history whenever setParams is called via "commit" action.
+  
+
+  // Fix scope issue: need variable inside setter
+  // Re-write separate function or use useEffect?
+  // Let's use a ref for history to avoid stale closures in listeners, 
+  // but state for re-render.
+  
+  const pushHistory = (newParams: GlitchParams) => {
+      setHistory(prev => {
+          const current = prev.slice(0, historyIndex + 1);
+          return [...current, newParams];
+      });
+      setHistoryIndex(prev => prev + 1);
+  };
+  
+  const undo = () => {
+      if (historyIndex > 0) {
+          const newIdx = historyIndex - 1;
+          const p = history[newIdx];
+          setParams(p);
+          setHistoryIndex(newIdx);
+          reprocess(p);
+      }
+  };
+  
+  const redo = () => {
+      if (historyIndex < history.length - 1) {
+          const newIdx = historyIndex + 1;
+          const p = history[newIdx];
+          setParams(p);
+          setHistoryIndex(newIdx);
+          reprocess(p);
+      }
+  };
+
+  // Keyboard Shortcuts
+  useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+              e.preventDefault();
+              if (e.shiftKey) redo();
+              else undo();
+          }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [historyIndex, history]); // Dep array ensures we have latest state
+
+  // Initialize history
+  useEffect(() => {
+      if (history.length === 0) {
+        // Initial push only if empty and ready? 
+        // Better: Don't push initially, let the first user action push.
+        // OR push default state.
+        // setHistory([params]); setHistoryIndex(0);
+      }
+  }, []); // Run once
+
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleUpload = (file: File) => {
-    setParams({ displacement: 0, chop: 0, noise: 0, crush: 0, seed: '' }); // Reset params
+    setParams({ 
+        displacement: 0, 
+        noise: 0, 
+        seed: '',
+        bloomThreshold: 0.5,
+        bloomIntensity: 0,
+        bloomRadius: 0.24
+    }); // Reset params
     processImage(file);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleParamsChange = (key: any, value: any) => {
     const newParams = { ...params, [key]: value };
     setParams(newParams);
     
-    // Debounce re-process
+    // Debounce re-process & history push
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(() => {
       reprocess(newParams);
+      // Only push to history if different?
+      pushHistory(newParams); 
     }, 150);
+  };
+  
+  // Interactive Spectrogram Handler
+  const handleSpectrogramInteraction = (x: number, y: number) => {
+      // Map X (0..1) -> Displacement (0..0.5)
+      // Map Y (0..1) -> Noise (0..0.8)
+      
+      const newDisplacement = Math.pow(x, 1.5) * 0.6; 
+      
+      // Y is Noise (Simple)
+      const newNoise = Math.pow(y, 1.2) * 0.8; // Slight curve for better control
+      
+      const newParams = { 
+          ...params, 
+          displacement: newDisplacement, 
+          noise: newNoise
+      };
+      
+      setParams(newParams);
+      
+      // Throttle reprocess? processImage is fast-ish but let's debounce slightly
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
+          reprocess(newParams);
+      }, 50); // Fast response
+  };
+  
+  const handleSpectrogramEnd = () => {
+      // Commit to history on drag release
+      pushHistory(params);
   };
 
   const handleRandomize = () => {
@@ -49,32 +151,52 @@ function App() {
       let seed = '';
       for(let i=0; i<6; i++) seed += chars.charAt(Math.floor(Math.random() * chars.length));
       
-      // @ts-expect-error seed type mix
       const newParams = { ...r, seed };
       setParams(newParams);
       reprocess(newParams);
   };
 
   const handleReset = () => {
-    const newParams = { displacement: 0, chop: 0, noise: 0, crush: 0, seed: '' };
+    const newParams = { 
+        displacement: 0, 
+        noise: 0, 
+        seed: '',
+        bloomThreshold: 0.5,
+        bloomIntensity: 0,
+        bloomRadius: 0
+    };
     setParams(newParams);
     reprocess(newParams);
   };
 
+  const getFormattedDate = () => {
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+  };
+
   const handleDownload = () => {
-    // Current view download
     if (glitchedUrl) {
-      // Find the canvas in Visualizer (hacky but effective for now, or assume glitchedUrl is the base)
-      // Visualizer now draws to its own canvas with filters.
-      // We should grab the canvas from the DOM or use the blob? 
-      // Actually, Visualizer modifies the view. The engine output (glitchedUrl) is always RGB.
-      // To save "What I See", we might need to apply the filter logic to a temp canvas.
+      // Create a temporary link to download the RGB image directly
+      // UNLESS the user wants the filtered view (e.g. Grayscale Red Channel).
+      // The user said "scaricare l'immagine rgb non lo spettrogramma".
+      // If they are in "Red" mode, do they want the Red Channel Image?
+      // Assuming "Save View" means "Save what I see in the Visualizer".
       
-      const canvas = document.querySelector('canvas.w-full') as HTMLCanvasElement; // Select visualizer canvas
+      // We need to target the canvas INSIDE the Visualizer. 
+      // We will add an ID to the Visualizer canvas in Visualizer.tsx, 
+      // but for now let's use a more specific selector if possible, 
+      // or just re-create the canvas from glitchedUrl if they want raw RGB.
+      
+      // User request: "save view... download rgb image not spectrogram".
+      // This implies the current selector might be grabbing the spectrogram.
+      // Let's grab the canvas that has the 'max-w-full' class which Visualizer uses.
+      
+      const canvas = document.querySelector('canvas.max-w-full') as HTMLCanvasElement;
       if (canvas) {
           const a = document.createElement('a');
           a.href = canvas.toDataURL('image/png');
-          a.download = `synes_output_${vizMode}_${Date.now()}.png`;
+          a.download = `synes_output_${vizMode}_${getFormattedDate()}.png`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
@@ -133,20 +255,29 @@ function App() {
               }
           }),
           saveVariant('red', (data) => {
-              for(let i=0; i<data.length; i+=4) { data[i+1]=0; data[i+2]=0; }
+              for(let i=0; i<data.length; i+=4) { 
+                  const val = data[i];
+                  data[i]=val; data[i+1]=val; data[i+2]=val; 
+              }
           }),
           saveVariant('green', (data) => {
-             for(let i=0; i<data.length; i+=4) { data[i]=0; data[i+2]=0; }
+              for(let i=0; i<data.length; i+=4) { 
+                  const val = data[i+1];
+                  data[i]=val; data[i+1]=val; data[i+2]=val; 
+              }
           }),
           saveVariant('blue', (data) => {
-             for(let i=0; i<data.length; i+=4) { data[i]=0; data[i+1]=0; }
+              for(let i=0; i<data.length; i+=4) { 
+                  const val = data[i+2];
+                  data[i]=val; data[i+1]=val; data[i+2]=val; 
+              }
           })
       ]);
       
       const content = await zip.generateAsync({ type: "blob" });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(content);
-      a.download = `synes_bundle_${Date.now()}.zip`;
+      a.download = `synes_bundle_${getFormattedDate()}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -158,6 +289,9 @@ function App() {
       <header className="w-full border-b border-white pb-6 mb-8 flex justify-between items-end">
         <div>
             <h1 className="text-4xl md:text-6xl font-bold uppercase tracking-widest">SYNES</h1>
+        </div>
+        <div className="text-xs uppercase font-bold tracking-widest text-right">
+            <span>© Mattia Capomagi</span>
         </div>
       </header>
 
@@ -182,7 +316,12 @@ function App() {
                  <div className="md:col-span-2 flex flex-col h-[300px] md:h-full min-h-[300px] md:min-h-[450px]">
                      <div className="flex-1 border border-white bg-black relative">
                         {/* Spectrogram fills height */}
-                        <Spectrogram data={spectrogramData} height={450} />
+                        <Spectrogram 
+                            data={spectrogramData} 
+                            height={450} 
+                            onInteraction={handleSpectrogramInteraction}
+                            onInteractionEnd={handleSpectrogramEnd}
+                        />
                         {/* Mobile Overlay Label */}
                         <div className="absolute top-2 right-2 text-[10px] md:hidden bg-black px-1 border border-white">SPECTRAL</div>
                      </div>
@@ -207,36 +346,46 @@ function App() {
         </section>
         
         {/* Step 3: Output */}
-        <section className={`space-y-4 transition-opacity duration-500 ${(!glitchedUrl) ? 'opacity-50' : 'opacity-100'}`}>
+        {glitchedUrl && (
+        <section className="space-y-4">
              <div className="flex items-center space-x-2 text-sm uppercase font-bold">
                 <span className="bg-white text-black px-2">03</span>
                 <span>Visual Reconstruction</span>
              </div>
-            <div className="h-[60vh] border border-white">
+            <div className="border border-white">
                 <Visualizer 
                     glitchedUrl={glitchedUrl} 
                     mode={vizMode} 
                     onModeChange={setVizMode}
+                    params={params}
+                    onParamsChange={handleParamsChange}
                 />
             </div>
-             {/* Save Buttons */}
-             {status === 'ready' && (
-                 <div className="flex space-x-4">
-                     <button 
-                        onClick={handleDownload}
-                        className="flex-1 bg-white text-black py-3 text-sm font-bold uppercase tracking-widest hover:bg-black hover:text-white border border-white transition-colors"
-                    >
-                        [ SAVE VIEW ]
-                    </button>
-                     <button 
-                        onClick={handleDownloadZip}
-                        className="flex-1 bg-black text-white py-3 text-sm font-bold uppercase tracking-widest hover:bg-white hover:text-black border border-white transition-colors animate-pulse"
-                    >
-                        [ DOWNLOAD ALL (ZIP) ]
-                    </button>
+             {/* Save Buttons - Fixed Bottom Footer */}
+             {status === 'ready' && glitchedUrl && (
+                 <div className="fixed bottom-0 left-0 w-full bg-black border-t border-white p-4 z-50">
+                     <div className="max-w-6xl mx-auto flex space-x-4">
+                         <button 
+                            onClick={handleDownload}
+                            className="flex-1 bg-white text-black py-3 text-sm font-bold uppercase tracking-widest hover:bg-black hover:text-white border border-white transition-colors"
+                        >
+                            [ SAVE VIEW ]
+                        </button>
+                         <button 
+                            onClick={handleDownloadZip}
+                            className="flex-1 bg-black text-white py-3 text-sm font-bold uppercase tracking-widest hover:bg-white hover:text-black border border-white transition-colors"
+                        >
+                            [ DOWNLOAD ALL (ZIP) ]
+                        </button>
+                     </div>
                  </div>
              )}
+
         </section>
+        )}
+        
+        {/* Spacer for fixed footer */}
+        <div className="h-24"></div>
       </main>
     </div>
   );

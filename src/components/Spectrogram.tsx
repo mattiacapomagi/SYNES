@@ -1,12 +1,50 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface SpectrogramProps {
   data: Uint8Array | null;
   height?: number;
+  onInteraction?: (x: number, y: number) => void;
+  onInteractionEnd?: () => void;
 }
 
-export const Spectrogram = ({ data, height = 200 }: SpectrogramProps) => {
+export const Spectrogram = ({ data, height = 200, onInteraction, onInteractionEnd }: SpectrogramProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDragging = useRef(false);
+
+  // Visual Cursor State
+  // We track local coordinates for the UI feedback
+  const [cursor, setCursor] = useState<{x: number, y: number} | null>(null);
+
+  const handlePointer = (e: React.PointerEvent) => {
+      if (!isDragging.current || !onInteraction) return;
+      
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const rawX = e.clientX - rect.left;
+      const rawY = e.clientY - rect.top;
+      
+      const x = Math.max(0, Math.min(1, rawX / rect.width));
+      const y = Math.max(0, Math.min(1, 1 - rawY / rect.height)); // 0 at bottom
+      
+      setCursor({ x: x * 100, y: (1-y) * 100 }); // Store as percentage top-left
+      onInteraction(x, y);
+  };
+
+  const startDrag = (e: React.PointerEvent) => {
+      isDragging.current = true;
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      handlePointer(e);
+  };
+
+  const endDrag = (e: React.PointerEvent) => {
+      isDragging.current = false;
+      const el = e.target as HTMLElement;
+      if(el && el.releasePointerCapture) el.releasePointerCapture(e.pointerId);
+      if (onInteractionEnd) onInteractionEnd();
+      setCursor(null); // Hide cursor on end
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -59,10 +97,30 @@ export const Spectrogram = ({ data, height = 200 }: SpectrogramProps) => {
   );
 
   return (
-    <canvas 
-        ref={canvasRef} 
-        className="w-full border border-white bg-black block"
-        style={{ height }}
-    />
+    <div className="relative w-full bg-black block select-none touch-none" style={{ height }}>
+        <canvas 
+            ref={canvasRef} 
+            className="w-full h-full cursor-crosshair touch-none block"
+            width={100} // placeholder, resized by effect
+            height={height}
+            onPointerDown={startDrag}
+            onPointerMove={handlePointer}
+            onPointerUp={endDrag}
+            onPointerLeave={endDrag}
+        />
+        {/* XY Pad Cursor Overlay */}
+        {cursor && (
+            <>
+                {/* Crosshairs */}
+                <div className="absolute top-0 bottom-0 border-l border-white/50 pointer-events-none" style={{ left: `${cursor.x}%` }} />
+                <div className="absolute left-0 right-0 border-t border-white/50 pointer-events-none" style={{ top: `${cursor.y}%` }} />
+                {/* Dot */}
+                <div 
+                    className="absolute w-3 h-3 bg-white rounded-full -ml-[6px] -mt-[6px] pointer-events-none shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+                    style={{ left: `${cursor.x}%`, top: `${cursor.y}%` }}
+                />
+            </>
+        )}
+    </div>
   );
 };

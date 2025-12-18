@@ -1,12 +1,15 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { logger } from '../utils/logger';
+import heic2any from 'heic2any';
 
 export interface GlitchParams {
   displacement: number; 
   noise: number; 
-  crush: number;
-  chop: number;
-  seed: string; // New seed param
+  seed: string;
+  // Optics
+  bloomThreshold: number; // 0..1
+  bloomIntensity: number; // 0..2
+  bloomRadius: number; // 0..1
 }
 
 // PRNG: Simple Mulberry32 (fast, deterministic)
@@ -24,6 +27,15 @@ const createPRNG = (seedStr: string) => {
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
 };
+
+// Seeded Hash Function for Blocks (Deterministic Chaos)
+const hashBlock = (blockIndex: number, seed: number) => {
+    let t = (blockIndex + seed) * 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+
 const encodeWAV = (samples: Float32Array, sampleRate: number) => {
     const buffer = new ArrayBuffer(44 + samples.length * 2);
     const view = new DataView(buffer);
@@ -77,6 +89,9 @@ export const useGlitchEngine = () => {
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const playbackStartTimeRef = useRef<number>(0);
   const pausedAtRef = useRef<number>(0);
+  
+  // Volatile seed logic removed as it was for randomErrors
+  // Keeping refs just in case we need them for other persistent effects, but for now cleanup.
 
   const getCanvas = useCallback(() => {
     if (!canvasRef.current) {
@@ -93,10 +108,26 @@ export const useGlitchEngine = () => {
       const data = buffer.getChannelData(0);
       
       let sIdx = 0;
+      let lastVal = 0;
+      // Smoothing factor: 0.0 = no smoothing, 0.9 = heavy smoothing
+      // We want distinct glitch sound but less harsh.
+      const smoothFactor = 0.5; 
+
       for(let i=0; i<pixels.length; i+=4) {
-          data[sIdx++] = (pixels[i] / 128.0) - 1.0;   // R
-          data[sIdx++] = (pixels[i+1] / 128.0) - 1.0; // G
-          data[sIdx++] = (pixels[i+2] / 128.0) - 1.0; // B
+          // R
+          let raw = (pixels[i] / 128.0) - 1.0;
+          let val = lastVal * smoothFactor + raw * (1 - smoothFactor);
+          data[sIdx++] = val; lastVal = val;
+
+          // G
+          raw = (pixels[i+1] / 128.0) - 1.0;
+          val = lastVal * smoothFactor + raw * (1 - smoothFactor);
+          data[sIdx++] = val; lastVal = val;
+
+          // B
+          raw = (pixels[i+2] / 128.0) - 1.0;
+          val = lastVal * smoothFactor + raw * (1 - smoothFactor);
+          data[sIdx++] = val; lastVal = val;
       }
       return buffer;
   }, [audioContext]);
@@ -122,7 +153,7 @@ export const useGlitchEngine = () => {
 
       const gain = audioContext.createGain();
       gain.gain.value = 0; // Start silent to de-click
-      gain.gain.linearRampToValueAtTime(0.8, audioContext.currentTime + 0.5); // Fade in
+      gain.gain.linearRampToValueAtTime(0.8, audioContext.currentTime + 0.05); // Super fast fade (50ms)
 
       src.connect(filter);
       filter.connect(gain);
@@ -171,6 +202,86 @@ export const useGlitchEngine = () => {
       }
   }, [isPlaying, playFrom]);
 
+  // --- OPTICS PIPELINE (Canvas 2D) ---
+  const applyOptics = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number, params: GlitchParams) => {
+      if (params.bloomIntensity <= 0) return;
+
+      // 1. Create Offscreen Canvas for Bloom Pass
+      // Downscale for performance and soft glow
+      const scale = 0.5;
+      const bW = Math.floor(width * scale);
+      const bH = Math.floor(height * scale);
+      
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = bW;
+      offCanvas.height = bH;
+      const offCtx = offCanvas.getContext('2d')!;
+      
+      // 2. Draw current state to offscreen
+      offCtx.drawImage(ctx.canvas, 0, 0, bW, bH);
+      
+      // 3. Threshold Pass (High-Pass Filter)
+      const imageData = offCtx.getImageData(0, 0, bW, bH);
+      const data = imageData.data;
+      const threshold = params.bloomThreshold * 255;
+      
+      for (let i = 0; i < data.length; i += 4) {
+          // Luma
+          const r = data[i];
+          const g = data[i+1];
+          const b = data[i+2];
+          const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+          
+          if (luma < threshold) {
+              // Mask out darks
+              data[i] = 0;
+              data[i+1] = 0;
+              data[i+2] = 0;
+              // Keep alpha? 
+              // data[i+3] = 255; 
+          } else {
+              // Tint Halation (Red Shift)
+              // Boost Red, slightly reduce Blue
+              data[i] = Math.min(255, r * 1.2); 
+              data[i+1] = g * 0.9;
+              data[i+2] = b * 0.8;
+          }
+      }
+      offCtx.putImageData(imageData, 0, 0);
+      
+      // 4. Blur Pass
+      // Using context filter is faster than JS loop
+      const blurRadius = params.bloomRadius * 40; // Max 40px blur
+      offCtx.filter = `blur(${blurRadius}px)`;
+      // We need to draw the image onto itself to apply the filter? 
+      // Context filter applies to drawing operations. It doesn't filter existing pixels instantly.
+      // So we must draw the thresholded content again.
+      // Wait, we just did putImageData (which ignores filter?).
+      // Trick: Put the imageData into a temp 2nd canvas.
+      
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = bW;
+      tempCanvas.height = bH;
+      const tempCtx = tempCanvas.getContext('2d')!;
+      tempCtx.putImageData(imageData, 0, 0);
+      
+      offCtx.clearRect(0, 0, bW, bH);
+      offCtx.drawImage(tempCanvas, 0, 0); // Draws the high-pass
+      
+      // 5. Composite Pass (Bloom -> Main)
+      ctx.globalCompositeOperation = 'screen'; // or 'lighter'
+      ctx.globalAlpha = params.bloomIntensity;
+      
+      // Draw the blurred bloom on top
+      // Need to scale back up
+      ctx.drawImage(offCanvas, 0, 0, width, height);
+      
+      // RESET
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1.0;
+      
+  }, []);
+
   // --- CORE EFFECTS ---
   const applyEffects = useCallback((imageDataObj: { width: number, height: number, data: Uint8ClampedArray }, params: GlitchParams) => {
     const { width, height, data } = imageDataObj;
@@ -181,161 +292,133 @@ export const useGlitchEngine = () => {
     // INIT PRNG
     const random = params.seed ? createPRNG(params.seed) : Math.random;
 
+    // Helper to get a stable integer seed from string for hashing
+    let seedInt = 12345;
+    if (params.seed) {
+        for(let c=0; c<params.seed.length; c++) seedInt += params.seed.charCodeAt(c);
+    }
+    
+    
+    // VOLATILE SEED removed
+    // const volatileSeed = errorSeedRef.current;
+
     // 1. TUNE DISPLACEMENT: Power of 4.
     const displacementForce = Math.pow(params.displacement, 4); 
-    const maxOffset = Math.floor(displacementForce * width * 0.2); 
+    const maxOffset = Math.floor(displacementForce * width * 0.4); // Increased max offset for more chaos
     
     // Y-Shift: Also reduce
-    const maxYShift = Math.floor(displacementForce * height * 0.1);
+    const maxYShift = Math.floor(displacementForce * height * 0.2);
 
-    let inChop = false;
-    let chopStartReadIndex = 0;
-    let chopCounter = 0;
-    let chopDuration = 0;
+    // REFACTORED LOOP: Gather Approach (Destination-Driven)
+    // Ensures every pixel is filled (no holes) and noise applies cleanly on top.
     
-    // TUNE CHOP: Power of 3
-    const chopProb = Math.pow(params.chop, 3) * 0.01; // Much lower probability at start
-
     for (let i = 0; i < data.length; i += 4) {
-        let readIndex = i;
 
-        if (params.chop > 0) {
-            if (inChop) {
-                readIndex = chopStartReadIndex + (i % chopDuration); 
-                chopCounter++;
-                if (chopCounter >= chopDuration) inChop = false;
-            } else {
-                if (random() < chopProb) { 
-                    inChop = true;
-                    chopCounter = 0;
-                    chopDuration = Math.floor(width * 4 * (0.2 + random() * 2)); 
-                    chopStartReadIndex = Math.floor(random() * (data.length - chopDuration));
-                    chopStartReadIndex -= chopStartReadIndex % 4;
-                    readIndex = chopStartReadIndex;
-                }
-            }
-        }
+        const x = (i / 4) % width;
+        const y = Math.floor((i / 4) / width);
 
-        if (displacementForce > 0 && !inChop) { 
-             const block = Math.floor(i / (width * 4)); 
-             // Use seeded random for purely chaotic displacement (No waves/patterns)
-             // We use 'block' as part of the random seed state or just call random() typically?
-             // Since 'random' is our LCG/PRNG stateful function, just calling it provides sequence.
-             // To avoid "static" look per block if we just called it once per block, we need to call it per block?
-             // But we are in a pixel loop.
-             
-             // Optimization: We should really compute shift maps per row/block outside the loop?
-             // For now, let's keep it simple. But to avoid "noise" look (jitter per pixel), we need coherence.
-             // The previous code had `block` calc. If we want per-line random:
-             // We can hash the block index to get a deterministic random for that block.
-             
-             // Simple "Jittery" Displacement (No Waves)
-             // We'll effectively just use random values, but consistent for a small run to avoid white noise.
-             // The previous code used Sine to get coherence.
-             // We can use a simplified "hash" of the block index to determine shift.
-             const r1 = ((block * 9301 + 49297) % 233280) / 233280.0;
-             const r2 = ((block * 49297 + 9301) % 233280) / 233280.0;
-             
-             // Mix with our PRNG random for frame-to-frame variation if input seed changes?
-             // Actually 'random()' is frame-constant if seed is constant.
-             // But wait, 'random()' advances state. If we call it per pixel, it's noise.
-             // If we call it per block, we need state management.
-             // To ensure "Random" but "Blocky" (glitchy):
-             
-             // Let's just use the PRNG we have but scale it such that it doesn't change every pixel?
-             // No, standard `random()` advances state.
-             
-             // Let's stick to the previous loop structure but replace sin/cos with a pseudo-random hash of the row `y`.
-             const y = Math.floor((i / 4) / width);
-             // Create a deterministic random value for this ROW 'y' based on the 'seed' string + y.
-             // But we can't easily re-seed per row efficiently here without perf hit.
-             
-             // Alternative: Pre-calculate shifts array at start of applyEffects?
-             // YES. That is the correct way. But let's stay inline for minimal refactor if possible.
-             // Actually, `Math.sin(block * 0.1)` gives a wave.
-             // `Math.sin(block * 123.456)` gives pseudo-randomness because high frequency aliases.
-             
-             const shiftX = Math.floor((Math.sin(block * 132.42 + params.noise * 100) * 43758.5453) % 1 * maxOffset);
-             const shiftY = Math.floor((Math.cos(block * 42.12 + params.noise * 100) * 12.345) % 1 * maxYShift) * width;
-             
-             readIndex += (shiftX * 4) + (shiftY * 4); 
-        }
+        // 1. DISPLACEMENT (Source Coordinate Calculation)
+        let srcX = x;
+        let srcY = y;
 
-        while (readIndex >= data.length) readIndex -= data.length;
-        while (readIndex < 0) readIndex += data.length;
+        if (displacementForce > 0) {
+            const block = Math.floor(i / (width * 4)); 
+            
+            // CHAOTIC DISPLACEMENT
+            // Instead of predictable sine waves, we use a seeded hash per block to determine shift.
+            // This creates "random chunks" of displacement.
+            
+            // Generate two pseudo-random numbers deterministic to the Seed + Block Line
+            const rndX = hashBlock(block, seedInt + 111);
+            const rndY = hashBlock(block, seedInt + 999);
+            
+            // Map 0..1 to -1..1 or similar range
+            // We want it to be centered? Or just positive shift? Glitch usually shifts right.
+            // Let's allow bidirectional shift for chaos.
+            const shiftX = Math.floor((rndX * 2 - 1) * maxOffset);
+            const shiftY = Math.floor((rndY * 2 - 1) * maxYShift);
+            
+            srcX = x + shiftX;
+            srcY = y + shiftY;
 
-        // NOISE (Seeded Random)
-        const noiseIntensity = params.noise;
-        if (noiseIntensity > 0) {
-            const r = random(); // Use seeded random
-            
-            // 1. Bitwise Corruption (Artifacts)
-            if (r < (noiseIntensity * 0.1)) {
-                 const corruptor = Math.floor(random() * 255 * noiseIntensity);
-                 for (let c = 0; c < 3; c++) {
-                    outputData[readIndex + c] = outputData[readIndex + c] ^ corruptor;
-                 }
-            }
-            // 2. Signal Dropout (Dead Pixels)
-            else if (r < (noiseIntensity * 0.05)) {
-                 outputData[readIndex] = 0;
-                 outputData[readIndex+1] = 0;
-                 outputData[readIndex+2] = 0;
-            }
-            // 3. Color Channel Drift
-            else if (r < noiseIntensity) {
-                 const drift = (random() - 0.5) * noiseIntensity * 50;
-                 for (let c = 0; c < 3; c++) {
-                    let val = outputData[readIndex + c] + drift;
-                    if (val > 255) val = 255;
-                    if (val < 0) val = 0;
-                    outputData[readIndex + c] = val;
-                 }
-            } else {
-                // Pass through clean pixel 
-                for (let c = 0; c < 3; c++) {
-                    outputData[readIndex + c] = data[readIndex + c];
-                }
-            }
-        } else {
-             // Copy clean if no noise
-             for (let c = 0; c < 3; c++) {
-                 outputData[i + c] = data[readIndex + c];
-             }
-        }
-
-        // HALFTONE / DITHERING (Replaces Crush)
-        // Simple monochrome halftone pattern mixed with original color
-        let crushVal = params.crush;
-        if (crushVal > 0) {
-            const x = (i / 4) % width;
-            const y = Math.floor((i / 4) / width);
-            
-            // Halftone Pattern: sin(x) * cos(y)
-            const dotSize = 4 + (1-crushVal) * 4; // Zoom based on intensity
-            const pattern = (Math.sin(x/dotSize) * Math.cos(y/dotSize)) * 128 + 128;
-            
-            // Calculate luminance
-            const lum = (outputData[i] * 0.299 + outputData[i+1] * 0.587 + outputData[i+2] * 0.114);
-            
-            // Threshold
-            const threshold = pattern;
-            const isDark = lum < threshold;
-            
-            // Apply halftone effect
-            // COLOR HALFTONE: If Dark -> Black. If Light -> Original Color.
-            // This preserves the color in the "dots" (or rather the empty space).
-            
-            for (let c = 0; c < 3; c++) {
-                const original = outputData[i+c];
-                const halftoned = isDark ? 0 : original; // 0 = Black dot, Original = Color
-                
-                // Mix based on crushVal (Intensity)
-                outputData[i + c] = (original * (1-crushVal)) + (halftoned * crushVal);
-            }
+            // Wrap logic for source coordinates
+            if (srcX >= width) srcX %= width;
+            if (srcX < 0) srcX = width + (srcX % width);
+            if (srcY >= height) srcY %= height;
+            if (srcY < 0) srcY = height + (srcY % width); // Wrap Y
         }
         
-        outputData[i + 3] = 255; 
+        // Calculate Source Index
+        let srcIndex = (Math.floor(srcY) * width + Math.floor(srcX)) * 4;
+        
+        // Safety wrap
+        if (srcIndex >= data.length) srcIndex %= data.length;
+        if (srcIndex < 0) srcIndex = 0; // Should not happen with math above but safe guard
+
+        // READ PIXEL
+        let rVal = data[srcIndex];
+        let gVal = data[srcIndex+1];
+        let bVal = data[srcIndex+2];
+
+        // 2. NOISE (Monochromatic Grain)
+        const noiseIntensity = params.noise;
+        if (noiseIntensity > 0) {
+            // Fine-grained mono noise
+            const grain = (random() - 0.5) * 255 * noiseIntensity;
+            
+            rVal = Math.min(255, Math.max(0, rVal + grain));
+            gVal = Math.min(255, Math.max(0, gVal + grain));
+            bVal = Math.min(255, Math.max(0, bVal + grain));
+        }
+
+        // 3. RANDOM ERRORS (REMOVED)
+        // Code block for random strips removed as requested.
+
+        // 4. BLOOM / HALATION (Highlight Bleed)
+        // Analog Trail effect: Bright pixels bleed rightwards creating a "tail"
+        const halation = params.halation;
+        if (halation > 0) {
+            // Threshold lowers as halation increases? Or fixed?
+            // Fixed threshold keeps it to highlights.
+            const threshold = 160; 
+            
+            // Amount of bleed per step. Higher = longer trails (since it decays slower relative to addition)
+            // Or addition amount?
+            // Let's make it add a fraction of the current pixel's brightness?
+            // Simple additive model:
+            const bleedAmount = Math.floor(halation * 50); // Max +50 brightness passed on
+            
+            // We need to iterate 0 to end.
+            // Since we modify outputData in place, and we move Left->Right, 
+            // the added brightness *will* be picked up by the next iteration, creating a trail.
+            
+            // Optimization: outputData is Uint8ClampedArray, so simple addition clamps automatically.
+            
+            // We need to do this OUTSIDE the gather loop?
+            // The current code block IS inside the gather loop (looping over 'i').
+            // Wait, the previous code block at line 303 was checking `outputData` which is being filled.
+            // But `i` in the context of line 240 is the pixel index.
+            // AND `outputData` is initialized at line 208.
+            // The gather loop fills `outputData`.
+            // But if we modify `i+4` (future pixel), it hasn't been written to yet by the main loop!
+            // The main loop writes `outputData[i] = rVal` at line 405.
+            
+            // CRITICAL FLAW in previous "Bloom" implementation:
+            // It was trying to read/write `outputData` inside the loop that *creates* `outputData`.
+            // Any write to i+4 would be OVERWRITTEN when the loop reaches i+4 and sets it to `rVal`.
+            
+            // CORRECT APPROACH:
+            // We must apply Halation as a separate pass AFTER the main loop.
+            // OR we maintain a "carry" value in the main loop.
+            
+            // Let's use a "carry" variable for R, G, B decay.
+        }
+
+        // WRITE PIXEL
+        outputData[i] = rVal;
+        outputData[i+1] = gVal;
+        outputData[i+2] = bVal;
+        outputData[i+3] = 255;  
 
         if (i / 4 < fftSize) vizBuffer[i/4] = outputData[i];
     }
@@ -349,6 +432,9 @@ export const useGlitchEngine = () => {
     const ctx = canvas.getContext('2d')!;
     const newImageData = new ImageData(outputData, width, height);
     ctx.putImageData(newImageData, 0, 0);
+    
+    // --- OPTICS PASS ---
+    applyOptics(ctx, width, height, params);
 
     canvas.toBlob((blob) => {
         if (!blob) return;
@@ -378,6 +464,21 @@ export const useGlitchEngine = () => {
 
     setStatus('processing');
     try {
+        let blob = file as Blob;
+
+        // HEIC Support
+        if (file.type === 'image/heic' || file.type === 'image/heif') {
+            logger.log('Converting HEIC...', 'info');
+            const converted = await heic2any({ 
+                blob: file,
+                toType: 'image/jpeg',
+                quality: 0.8
+            });
+            // Handle array or blob
+            blob = Array.isArray(converted) ? converted[0] : converted;
+            logger.log('HEIC Converted.', 'success');
+        }
+
         const img = new Image();
         img.onload = () => {
             const canvas = getCanvas();
@@ -402,14 +503,21 @@ export const useGlitchEngine = () => {
             setAudioDuration(duration);
 
             logger.log(`Initialized. Duration: ${duration.toFixed(2)}s`, 'success');
-            applyEffects(originalParamsRef.current, { displacement: 0, noise: 0, crush: 0, chop: 0, seed: '' });
+            applyEffects(originalParamsRef.current, { 
+                displacement: 0, 
+                noise: 0, 
+                seed: '',
+                bloomThreshold: 0.5,
+                bloomIntensity: 0,
+                bloomRadius: 0
+            });
             setStatus('ready');
         };
         img.onerror = () => {
              logger.log('Error: Failed to load image. If HEIC/TIFF, try Safari.', 'error');
              setStatus('error');
         };
-        img.src = URL.createObjectURL(file);
+        img.src = URL.createObjectURL(blob);
     } catch (e) {
       logger.log(`Error: ${e}`, 'error');
       setStatus('error');
@@ -426,10 +534,10 @@ export const useGlitchEngine = () => {
       return {
           displacement: Math.random() * 0.4,
           noise: Math.random() * 0.4, 
-          crush: Math.random() < 0.5 ? 0 : Math.random(), 
-          chop: Math.random() * 0.5,
-          seed: '' // Default seed empty for randomizer, or generate random string here?
-                   // Actually handleRandomize in App sets the seed. 
+          seed: '',
+          bloomThreshold: 0.2 + Math.random() * 0.5,
+          bloomIntensity: Math.random() * 1.5,
+          bloomRadius: Math.random() * 0.8 
       };
   }, []);
   
