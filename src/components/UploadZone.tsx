@@ -1,13 +1,35 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 interface UploadZoneProps {
   onUpload: (file: File) => void;
 }
 
 export const UploadZone = ({ onUpload }: UploadZoneProps) => {
+  const [isDragActive, setIsDragActive] = useState(false);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
+      e.stopPropagation();
+      setIsDragActive(false);
+
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith('image/')) {
         onUpload(file);
@@ -41,13 +63,13 @@ export const UploadZone = ({ onUpload }: UploadZoneProps) => {
         type="file"
         accept="image/*"
         onChange={handleChange}
-        className="absolute inset-0 opacity-0 cursor-pointer"
+        className="hidden"
       />
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold uppercase tracking-widest border-b border-transparent group-hover:border-black inline-block">
+      <div className="space-y-4 pointer-events-none">
+        <h2 className="text-2xl font-bold uppercase tracking-widest border-b border-transparent group-hover:border-primary inline-block transition-colors text-primary">
           Insert Image
         </h2>
-        <p className="text-xs uppercase opacity-70">
+        <p className="text-xs uppercase opacity-70 text-primary">
           [ DRAG & DROP or CLICK ] <br />
           SUPPORTED formats: JPG / PNG / GIF / WEBP / TIFF / HEIC
         </p>

@@ -23,6 +23,9 @@ function App() {
     bloomRadius: 0.24
   });
 
+  // Theme State
+  const [isDark, setIsDark] = useState(true);
+
   // Undo History
   const [history, setHistory] = useState<GlitchParams[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -284,34 +287,34 @@ function App() {
   };
 
   // Remove visible logger as requested, but keep strict layout
+  // Toggle Theme Helper
+  const toggleTheme = () => setIsDark(!isDark);
+
   return (
     <div className={`${isDark ? 'dark' : ''}`}>
         <div className="min-h-screen w-full flex flex-col items-center p-4 md:p-8 max-w-6xl mx-auto font-mono text-primary bg-white dark:bg-black selection:bg-primary selection:text-white transition-colors duration-300">
         <header className="w-full border-b border-primary pb-6 mb-8 flex justify-between items-end">
-        <div>
-            <h1 className="text-4xl md:text-6xl font-bold uppercase tracking-widest">SYNES</h1>
-        </div>
-        <div className="text-xs uppercase font-bold tracking-widest text-right">
-            <span>© Mattia Capomagi</span>
-        </div>
-      </header>
+            <div>
+                <h1 className="text-4xl md:text-6xl font-bold uppercase tracking-widest">SYNES</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+                 <button 
+                    onClick={toggleTheme} 
+                    className="text-xs uppercase font-bold tracking-widest hover:opacity-50"
+                 >
+                    [{isDark ? 'LIGHT' : 'DARK'}]
+                 </button>
+            </div>
+        </header>
 
       <main className="flex-1 w-full space-y-12">
-        {/* Step 1: Input */}
+        {/* Input Section */}
         <section className="space-y-4">
-             <div className="flex items-center space-x-2 text-sm uppercase font-bold">
-                <span className="bg-white text-black px-2">01</span>
-                <span>Signal Input</span>
-             </div>
              <UploadZone onUpload={handleUpload} />
         </section>
 
-        {/* Step 2: Processing */}
+        {/* Processing Section */}
         <section className={`space-y-4 transition-opacity duration-500 ${status === 'idle' ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-             <div className="flex items-center space-x-2 text-sm uppercase font-bold">
-                <span className="bg-white text-black px-2">02</span>
-                <span>Spectral Analysis</span>
-             </div>
              
              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch font-mono">
                  <div className="md:col-span-2 flex flex-col h-[300px] md:h-full min-h-[300px] md:min-h-[450px]">
@@ -346,13 +349,9 @@ function App() {
              </div>
         </section>
         
-        {/* Step 3: Output */}
+        {/* Output Section */}
         {glitchedUrl && (
         <section className="space-y-4">
-             <div className="flex items-center space-x-2 text-sm uppercase font-bold">
-                <span className="bg-white text-black px-2">03</span>
-                <span>Visual Reconstruction</span>
-             </div>
             <div className="border border-primary">
                 <Visualizer 
                     glitchedUrl={glitchedUrl} 
@@ -388,6 +387,7 @@ function App() {
         {/* Spacer for fixed footer */}
         <div className="h-24"></div>
       </main>
+      </div>
     </div>
   );
 }
