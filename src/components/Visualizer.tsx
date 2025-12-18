@@ -91,13 +91,13 @@ export const Visualizer = ({ glitchedUrl, mode, onModeChange, params, onParamsCh
         {/* HUD Elements */}
         {/* HUD Elements */}
         {/* Top Left: Optics Controls */}
-        <div className="absolute top-0 left-0 m-4 bg-black/80 backdrop-blur-sm border border-white/20 p-2">
+        <div className="absolute top-0 left-0 m-4 bg-white/80 dark:bg-black/80 backdrop-blur-sm border border-black/20 dark:border-white/20 p-2">
             <div className="flex items-center space-x-2 mb-1">
                  {/* Optics Toggle as Main Label */}
                  <button 
                     onClick={() => setShowOptics(!showOptics)}
                     className={`text-[10px] uppercase font-bold px-2 py-0.5 ${
-                        showOptics ? 'bg-white text-black' : 'text-white/70 hover:text-white'
+                        showOptics ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-black/70 hover:text-black dark:text-white/70 dark:hover:text-white'
                     }`}
                 >
                     EFFECTS
@@ -105,10 +105,10 @@ export const Visualizer = ({ glitchedUrl, mode, onModeChange, params, onParamsCh
             </div>
 
             {showOptics && (
-                <div className="space-y-3 w-48 pt-2 border-t border-white/20">
+                <div className="space-y-3 w-48 pt-2 border-t border-black/20 dark:border-white/20">
                     {/* Intensity */}
                     <div className="space-y-1">
-                        <div className="flex justify-between text-[9px] uppercase text-white/70">
+                        <div className="flex justify-between text-[9px] uppercase text-black/70 dark:text-white/70">
                             <span>Bloom</span>
                             <span>{params.bloomIntensity?.toFixed(2)}</span>
                         </div>
@@ -119,12 +119,12 @@ export const Visualizer = ({ glitchedUrl, mode, onModeChange, params, onParamsCh
                             step="0.01"
                             value={params.bloomIntensity || 0}
                             onChange={(e) => onParamsChange('bloomIntensity', parseFloat(e.target.value))}
-                            className="w-full h-1 bg-white/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-white"
+                            className="w-full h-1 bg-black/20 dark:bg-white/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-black dark:[&::-webkit-slider-thumb]:bg-white"
                         />
                     </div>
                     {/* Radius */}
                     <div className="space-y-1">
-                         <div className="flex justify-between text-[9px] uppercase text-white/70">
+                         <div className="flex justify-between text-[9px] uppercase text-black/70 dark:text-white/70">
                             <span>Radius</span>
                             <span>{Math.max(0, (params.bloomRadius || 0.24) - 0.24).toFixed(2)}</span>
                         </div>
@@ -135,12 +135,12 @@ export const Visualizer = ({ glitchedUrl, mode, onModeChange, params, onParamsCh
                             step="0.01"
                             value={params.bloomRadius || 0.24}
                             onChange={(e) => onParamsChange('bloomRadius', parseFloat(e.target.value))}
-                            className="w-full h-1 bg-white/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-white"
+                            className="w-full h-1 bg-black/20 dark:bg-white/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-black dark:[&::-webkit-slider-thumb]:bg-white"
                         />
                     </div>
                     {/* Threshold */}
                     <div className="space-y-1">
-                         <div className="flex justify-between text-[9px] uppercase text-white/70">
+                         <div className="flex justify-between text-[9px] uppercase text-black/70 dark:text-white/70">
                             <span>Threshold</span>
                             <span>{params.bloomThreshold?.toFixed(2)}</span>
                         </div>
@@ -151,7 +151,7 @@ export const Visualizer = ({ glitchedUrl, mode, onModeChange, params, onParamsCh
                             step="0.01"
                             value={params.bloomThreshold || 0}
                             onChange={(e) => onParamsChange('bloomThreshold', parseFloat(e.target.value))}
-                            className="w-full h-1 bg-white/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-white"
+                            className="w-full h-1 bg-black/20 dark:bg-white/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-black dark:[&::-webkit-slider-thumb]:bg-white"
                         />
                     </div>
                 </div>
