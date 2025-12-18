@@ -374,45 +374,8 @@ export const useGlitchEngine = () => {
         // 3. RANDOM ERRORS (REMOVED)
         // Code block for random strips removed as requested.
 
-        // 4. BLOOM / HALATION (Highlight Bleed)
-        // Analog Trail effect: Bright pixels bleed rightwards creating a "tail"
-        const halation = params.halation;
-        if (halation > 0) {
-            // Threshold lowers as halation increases? Or fixed?
-            // Fixed threshold keeps it to highlights.
-            const threshold = 160; 
-            
-            // Amount of bleed per step. Higher = longer trails (since it decays slower relative to addition)
-            // Or addition amount?
-            // Let's make it add a fraction of the current pixel's brightness?
-            // Simple additive model:
-            const bleedAmount = Math.floor(halation * 50); // Max +50 brightness passed on
-            
-            // We need to iterate 0 to end.
-            // Since we modify outputData in place, and we move Left->Right, 
-            // the added brightness *will* be picked up by the next iteration, creating a trail.
-            
-            // Optimization: outputData is Uint8ClampedArray, so simple addition clamps automatically.
-            
-            // We need to do this OUTSIDE the gather loop?
-            // The current code block IS inside the gather loop (looping over 'i').
-            // Wait, the previous code block at line 303 was checking `outputData` which is being filled.
-            // But `i` in the context of line 240 is the pixel index.
-            // AND `outputData` is initialized at line 208.
-            // The gather loop fills `outputData`.
-            // But if we modify `i+4` (future pixel), it hasn't been written to yet by the main loop!
-            // The main loop writes `outputData[i] = rVal` at line 405.
-            
-            // CRITICAL FLAW in previous "Bloom" implementation:
-            // It was trying to read/write `outputData` inside the loop that *creates* `outputData`.
-            // Any write to i+4 would be OVERWRITTEN when the loop reaches i+4 and sets it to `rVal`.
-            
-            // CORRECT APPROACH:
-            // We must apply Halation as a separate pass AFTER the main loop.
-            // OR we maintain a "carry" value in the main loop.
-            
-            // Let's use a "carry" variable for R, G, B decay.
-        }
+        // 4. BLOOM / HALATION (Highlight Bleed) - Removed legacy code
+        // Optics pipeline handles this separately via applyOptics
 
         // WRITE PIXEL
         outputData[i] = rVal;
@@ -530,14 +493,12 @@ export const useGlitchEngine = () => {
       }
   }, [applyEffects]);
   
-  const randomizeParams = useCallback((): GlitchParams => {
+  const randomizeParams = useCallback((): Partial<GlitchParams> => {
+      // Bloom parameters are excluded from randomization as requested
       return {
           displacement: Math.random() * 0.4,
           noise: Math.random() * 0.4, 
-          seed: '',
-          bloomThreshold: 0.2 + Math.random() * 0.5,
-          bloomIntensity: Math.random() * 1.5,
-          bloomRadius: Math.random() * 0.8 
+          seed: '' 
       };
   }, []);
   

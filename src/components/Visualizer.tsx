@@ -91,8 +91,8 @@ export const Visualizer = ({ glitchedUrl, mode, onModeChange, params, onParamsCh
         {/* HUD Elements */}
         {/* HUD Elements */}
         {/* Top Left: Optics Controls */}
-        <div className="absolute top-0 left-0 m-4 bg-black/80 backdrop-blur-sm border border-white/20 p-4">
-            <div className="flex items-center space-x-4 mb-2">
+        <div className="absolute top-0 left-0 m-4 bg-black/80 backdrop-blur-sm border border-white/20 p-2">
+            <div className="flex items-center space-x-2 mb-1">
                  {/* Optics Toggle as Main Label */}
                  <button 
                     onClick={() => setShowOptics(!showOptics)}
@@ -100,7 +100,7 @@ export const Visualizer = ({ glitchedUrl, mode, onModeChange, params, onParamsCh
                         showOptics ? 'bg-white text-black' : 'text-white/70 hover:text-white'
                     }`}
                 >
-                    EFFECTS {showOptics ? 'ON' : 'OFF'}
+                    EFFECTS
                 </button>
             </div>
 

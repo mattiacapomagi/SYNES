@@ -151,7 +151,7 @@ function App() {
       let seed = '';
       for(let i=0; i<6; i++) seed += chars.charAt(Math.floor(Math.random() * chars.length));
       
-      const newParams = { ...r, seed };
+      const newParams = { ...params, ...r, seed };
       setParams(newParams);
       reprocess(newParams);
   };
