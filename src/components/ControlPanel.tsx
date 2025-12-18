@@ -45,11 +45,11 @@ export const ControlPanel = ({
   };
 
   return (
-    <div className="border border-black dark:border-white p-6 pt-20 md:pt-6 space-y-6 w-full h-full flex flex-col justify-between bg-white dark:bg-black min-h-[300px] transition-colors duration-300">
+    <div className="border border-primary p-6 pt-20 md:pt-6 space-y-6 w-full h-full flex flex-col justify-between bg-white dark:bg-black min-h-[300px] transition-colors duration-300">
       <div className="space-y-6">
-        <div className="flex justify-between items-center border-b border-black dark:border-white pb-2 mb-4">
-            <h3 className="uppercase text-sm font-bold tracking-widest">Chaos Control</h3>
-            <div className={`w-2 h-2 ${isReady ? 'bg-black dark:bg-white animate-pulse' : 'bg-transparent border border-black dark:border-white'}`}></div>
+        <div className="flex justify-between items-center border-b border-primary pb-2 mb-4">
+            <h3 className="uppercase text-sm font-bold tracking-widest text-primary">Chaos Control</h3>
+            <div className={`w-2 h-2 ${isReady ? 'bg-primary animate-pulse' : 'bg-transparent border border-primary'}`}></div>
         </div>
 
         {/* Displacement */}
@@ -66,13 +66,13 @@ export const ControlPanel = ({
                 value={params.displacement}
                 onChange={(e) => onChange('displacement', parseFloat(e.target.value))}
                 disabled={!isReady}
-                className="w-full appearance-none bg-transparent border border-black dark:border-white h-4 focus:outline-none 
+                className="w-full appearance-none bg-transparent border border-primary h-4 focus:outline-none 
                         [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 
-                        [&::-webkit-slider-thumb]:bg-black dark:[&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer 
+                        [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:cursor-pointer 
                         disabled:opacity-50"
             />
              {/* Seed Input - Increased margin top to separate from slider */}
-             <div className="pt-4 pl-4 border-l border-black/30 dark:border-white/30 ml-2 mt-2">
+             <div className="pt-4 pl-4 border-l border-primary/30 ml-2 mt-2">
                 <div className="flex justify-between text-[10px] uppercase mb-1 opacity-70">
                     <span>Seed (Chaos Source)</span>
                 </div>
@@ -85,11 +85,11 @@ export const ControlPanel = ({
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') handleSeedSubmit();
                         }}
-                        className="flex-1 bg-transparent border-b border-black dark:border-white py-1 text-xs font-mono focus:outline-none uppercase placeholder:text-black/30 dark:placeholder:text-white/30"
+                        className="flex-1 bg-transparent border-b border-primary py-1 text-xs font-mono focus:outline-none uppercase placeholder:text-primary/30 text-primary"
                     />
                     <button 
                         onClick={handleSeedSubmit}
-                        className="text-[10px] uppercase border border-black dark:border-white px-2 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
+                        className="text-[10px] uppercase border border-primary px-2 hover:bg-primary hover:text-white dark:hover:text-black transition-colors text-primary"
                     >
                         [ APPLY ]
                     </button>
@@ -111,9 +111,9 @@ export const ControlPanel = ({
                 value={params.noise}
                 onChange={(e) => onChange('noise', parseFloat(e.target.value))}
                 disabled={!isReady}
-                className="w-full appearance-none bg-transparent border border-black dark:border-white h-4 focus:outline-none 
+                className="w-full appearance-none bg-transparent border border-primary h-4 focus:outline-none 
                         [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 
-                        [&::-webkit-slider-thumb]:bg-black dark:[&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer 
+                        [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:cursor-pointer 
                         disabled:opacity-50"
             />
         </div>
@@ -125,21 +125,21 @@ export const ControlPanel = ({
              <button
                 onClick={onRandomize}
                 disabled={!isReady}
-                className="border border-black dark:border-white py-2 px-4 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black uppercase text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                className="border border-primary py-2 px-4 hover:bg-primary hover:text-white dark:hover:text-black uppercase text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-center text-primary"
             >
                 [ Randomize ]
             </button>
              <button
                 onClick={onReset}
                 disabled={!isReady}
-                className="border border-black dark:border-white py-2 px-4 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black uppercase text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-center"
+                className="border border-primary py-2 px-4 hover:bg-primary hover:text-white dark:hover:text-black uppercase text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-center text-primary"
             >
                 [ Reset ]
             </button>
          </div>
 
         {/* Player UI */}
-        <div className="border-t border-black dark:border-white pt-4 space-y-2">
+        <div className="border-t border-primary pt-4 space-y-2">
             <div className="flex justify-between items-center">
                  <button
                     onClick={onTogglePlay}
@@ -161,14 +161,14 @@ export const ControlPanel = ({
                 value={currentTime}
                 onChange={(e) => onSeek(parseFloat(e.target.value))}
                 disabled={!isReady}
-                className="w-full h-1 bg-black/20 dark:bg-white/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-black dark:[&::-webkit-slider-thumb]:bg-white"
+                className="w-full h-1 bg-primary/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-primary"
             />
             
             <div className="flex justify-between space-x-2 pt-2">
                 <button
                     onClick={onDownloadAudio}
                     disabled={!isReady}
-                    className="flex-1 border border-black dark:border-white py-1 px-2 text-[10px] uppercase hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors disabled:opacity-50"
+                    className="flex-1 border border-primary py-1 px-2 text-[10px] uppercase hover:bg-primary hover:text-white dark:hover:text-black transition-colors disabled:opacity-50 text-primary"
                 >
                     Save WAV
                 </button>

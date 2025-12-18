@@ -23,9 +23,6 @@ function App() {
     bloomRadius: 0.24
   });
 
-  // Theme State (Default to Dark)
-  const [isDark, setIsDark] = useState(true);
-
   // Undo History
   const [history, setHistory] = useState<GlitchParams[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -154,7 +151,7 @@ function App() {
       let seed = '';
       for(let i=0; i<6; i++) seed += chars.charAt(Math.floor(Math.random() * chars.length));
       
-      const newParams = { ...params, ...r, seed };
+      const newParams = { ...r, seed };
       setParams(newParams);
       reprocess(newParams);
   };
@@ -286,37 +283,39 @@ function App() {
       document.body.removeChild(a);
   };
 
-  // Toggle Theme Helper
-  const toggleTheme = () => setIsDark(!isDark);
-
+  // Remove visible logger as requested, but keep strict layout
   return (
     <div className={`${isDark ? 'dark' : ''}`}>
-        <div className="min-h-screen w-full flex flex-col items-center p-4 md:p-8 max-w-6xl mx-auto font-mono text-black dark:text-white bg-white dark:bg-black selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-300">
-        <header className="w-full border-b border-black dark:border-white pb-6 mb-8 flex justify-between items-end">
-            <div>
-                <h1 className="text-4xl md:text-6xl font-bold uppercase tracking-widest">SYNES</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-                 <button 
-                    onClick={toggleTheme} 
-                    className="text-xs uppercase font-bold tracking-widest hover:opacity-50"
-                 >
-                    [{isDark ? 'LIGHT' : 'DARK'}]
-                 </button>
-            </div>
-        </header>
+        <div className="min-h-screen w-full flex flex-col items-center p-4 md:p-8 max-w-6xl mx-auto font-mono text-primary bg-white dark:bg-black selection:bg-primary selection:text-white transition-colors duration-300">
+        <header className="w-full border-b border-primary pb-6 mb-8 flex justify-between items-end">
+        <div>
+            <h1 className="text-4xl md:text-6xl font-bold uppercase tracking-widest">SYNES</h1>
+        </div>
+        <div className="text-xs uppercase font-bold tracking-widest text-right">
+            <span>© Mattia Capomagi</span>
+        </div>
+      </header>
 
-        <main className="flex-1 w-full space-y-12">
-            {/* Input Section */}
-            <section className="space-y-4">
-                <UploadZone onUpload={handleUpload} />
-            </section>
+      <main className="flex-1 w-full space-y-12">
+        {/* Step 1: Input */}
+        <section className="space-y-4">
+             <div className="flex items-center space-x-2 text-sm uppercase font-bold">
+                <span className="bg-white text-black px-2">01</span>
+                <span>Signal Input</span>
+             </div>
+             <UploadZone onUpload={handleUpload} />
+        </section>
 
-            {/* Processing Section */}
-            <section className={`space-y-4 transition-opacity duration-500 ${status === 'idle' ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch font-mono">
-                    <div className="md:col-span-2 flex flex-col h-[300px] md:h-full min-h-[300px] md:min-h-[450px]">
-                        <div className="flex-1 border border-black dark:border-white bg-white dark:bg-black relative">
+        {/* Step 2: Processing */}
+        <section className={`space-y-4 transition-opacity duration-500 ${status === 'idle' ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+             <div className="flex items-center space-x-2 text-sm uppercase font-bold">
+                <span className="bg-white text-black px-2">02</span>
+                <span>Spectral Analysis</span>
+             </div>
+             
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch font-mono">
+                 <div className="md:col-span-2 flex flex-col h-[300px] md:h-full min-h-[300px] md:min-h-[450px]">
+                     <div className="flex-1 border border-primary bg-white dark:bg-black relative">
                         {/* Spectrogram fills height */}
                         <Spectrogram 
                             data={spectrogramData} 
@@ -325,7 +324,7 @@ function App() {
                             onInteractionEnd={handleSpectrogramEnd}
                         />
                         {/* Mobile Overlay Label */}
-                        <div className="absolute top-2 right-2 text-[10px] md:hidden bg-white dark:bg-black text-black dark:text-white px-1 border border-black dark:border-white">SPECTRAL</div>
+                        <div className="absolute top-2 right-2 text-[10px] md:hidden bg-white dark:bg-black text-primary px-1 border border-primary">SPECTRAL</div>
                      </div>
                  </div>
                  <div className="h-full">
@@ -347,10 +346,14 @@ function App() {
              </div>
         </section>
         
-            {/* Output Section */}
-            {glitchedUrl && (
-            <section className="space-y-4">
-                <div className="border border-black dark:border-white">
+        {/* Step 3: Output */}
+        {glitchedUrl && (
+        <section className="space-y-4">
+             <div className="flex items-center space-x-2 text-sm uppercase font-bold">
+                <span className="bg-white text-black px-2">03</span>
+                <span>Visual Reconstruction</span>
+             </div>
+            <div className="border border-primary">
                 <Visualizer 
                     glitchedUrl={glitchedUrl} 
                     mode={vizMode} 
@@ -359,25 +362,25 @@ function App() {
                     onParamsChange={handleParamsChange}
                 />
             </div>
-                {/* Save Buttons - Fixed Bottom Footer */}
-                {status === 'ready' && glitchedUrl && (
-                    <div className="fixed bottom-0 left-0 w-full bg-white dark:bg-black border-t border-black dark:border-white p-4 z-50 transition-colors duration-300">
-                        <div className="max-w-6xl mx-auto flex space-x-4">
-                            <button 
-                                onClick={handleDownload}
-                                className="flex-1 bg-black text-white dark:bg-white dark:text-black py-3 text-sm font-bold uppercase tracking-widest hover:opacity-80 border border-black dark:border-white transition-all"
-                            >
-                                [ SAVE VIEW ]
-                            </button>
-                            <button 
-                                onClick={handleDownloadZip}
-                                className="flex-1 bg-white text-black dark:bg-black dark:text-white py-3 text-sm font-bold uppercase tracking-widest hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black border border-black dark:border-white transition-all"
-                            >
-                                [ DOWNLOAD ALL (ZIP) ]
-                            </button>
-                        </div>
-                    </div>
-                )}
+             {/* Save Buttons - Fixed Bottom Footer */}
+             {status === 'ready' && glitchedUrl && (
+                 <div className="fixed bottom-0 left-0 w-full bg-white dark:bg-black border-t border-primary p-4 z-50 transition-colors duration-300">
+                     <div className="max-w-6xl mx-auto flex space-x-4">
+                         <button 
+                            onClick={handleDownload}
+                            className="flex-1 bg-primary text-white dark:text-black py-3 text-sm font-bold uppercase tracking-widest hover:opacity-80 border border-primary transition-all"
+                        >
+                            [ SAVE VIEW ]
+                        </button>
+                         <button 
+                            onClick={handleDownloadZip}
+                            className="flex-1 bg-transparent text-primary py-3 text-sm font-bold uppercase tracking-widest hover:bg-primary hover:text-white dark:hover:text-black border border-primary transition-all"
+                        >
+                            [ DOWNLOAD ALL (ZIP) ]
+                        </button>
+                     </div>
+                 </div>
+             )}
 
         </section>
         )}
@@ -385,7 +388,6 @@ function App() {
         {/* Spacer for fixed footer */}
         <div className="h-24"></div>
       </main>
-      </div>
     </div>
   );
 }
