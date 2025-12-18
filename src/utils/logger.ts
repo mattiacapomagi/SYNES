@@ -18,7 +18,21 @@ class LoggerService {
       level,
     };
     this.listeners.forEach(l => l(entry));
-    console.log(`[SYNES][${level.toUpperCase()}] ${message}`); 
+    
+    // Advanced Console Logging
+    const timestamp = new Date().toLocaleTimeString();
+    const prefix = `[SYNES ${timestamp}]`;
+    const style = level === 'error' ? 'color: #ff0000; font-weight: bold;' : 
+                  level === 'success' ? 'color: #00ff00; font-weight: bold;' : 
+                  level === 'warn' ? 'color: #ffa500;' : 'color: #00aaff;';
+    
+    console.log(`%c${prefix} ${message}`, style);
+    
+    // Mirror to window for remote debugging if needed
+    // @ts-ignore
+    if (!window.__SYNES_LOGS__) window.__SYNES_LOGS__ = [];
+    // @ts-ignore
+    window.__SYNES_LOGS__.push(entry);
   }
 
   subscribe(listener: (entry: LogEntry) => void) {
