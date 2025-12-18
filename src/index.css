@@ -3,13 +3,11 @@
 @tailwind utilities;
 
 :root {
-  background-color: #000000;
-  color: #ffffff;
+  /* Dynamic Variables if needed */
 }
 
 body {
-  @apply font-mono bg-black text-white antialiased;
-  /* Cyber-minimalism: No smooth scrolling, raw feel */
+  @apply font-mono antialiased bg-white dark:bg-black text-primary transition-colors duration-300;
 }
 
 /* Custom Scrollbar */

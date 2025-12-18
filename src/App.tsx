@@ -24,7 +24,25 @@ function App() {
   });
 
   // Theme State
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(() => {
+     if (typeof window !== 'undefined') {
+         // Default to dark unless explicit light preference
+         return localStorage.getItem('theme') !== 'light'; 
+     }
+     return true;
+  });
+
+  // Apply Theme to Client
+  useEffect(() => {
+      const root = window.document.documentElement;
+      if (isDark) {
+          root.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+      } else {
+          root.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+      }
+  }, [isDark]);
 
   // Undo History
   const [history, setHistory] = useState<GlitchParams[]>([]);
@@ -291,8 +309,8 @@ function App() {
   const toggleTheme = () => setIsDark(!isDark);
 
   return (
-    <div className={`${isDark ? 'dark' : ''}`}>
-        <div className="min-h-screen w-full flex flex-col items-center p-4 md:p-8 max-w-6xl mx-auto font-mono text-primary bg-white dark:bg-black selection:bg-primary selection:text-white transition-colors duration-300">
+    <div className="min-h-screen">
+        <div className="min-h-screen w-full flex flex-col items-center p-4 md:p-8 max-w-6xl mx-auto font-mono font-bold text-primary bg-white dark:bg-black selection:bg-primary selection:text-white transition-colors duration-300">
         <header className="w-full border-b border-primary pb-6 mb-8 flex justify-between items-end">
             <div>
                 <h1 className="text-4xl md:text-6xl font-bold uppercase tracking-widest">SYNES</h1>
