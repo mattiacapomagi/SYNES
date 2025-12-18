@@ -385,6 +385,7 @@ function App() {
         {/* Spacer for fixed footer */}
         <div className="h-24"></div>
       </main>
+      </div>
     </div>
   );
 }
