@@ -6,10 +6,6 @@ export interface GlitchParams {
   displacement: number; 
   noise: number; 
   seed: string;
-  // Optics
-  bloomThreshold: number; // 0..1
-  bloomIntensity: number; // 0..2
-  bloomRadius: number; // 0..1
 }
 
 // PRNG: Simple Mulberry32 (fast, deterministic)
@@ -202,85 +198,7 @@ export const useGlitchEngine = () => {
       }
   }, [isPlaying, playFrom]);
 
-  // --- OPTICS PIPELINE (Canvas 2D) ---
-  const applyOptics = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number, params: GlitchParams) => {
-      if (params.bloomIntensity <= 0) return;
-
-      // 1. Create Offscreen Canvas for Bloom Pass
-      // Downscale for performance and soft glow
-      const scale = 0.5;
-      const bW = Math.floor(width * scale);
-      const bH = Math.floor(height * scale);
-      
-      const offCanvas = document.createElement('canvas');
-      offCanvas.width = bW;
-      offCanvas.height = bH;
-      const offCtx = offCanvas.getContext('2d')!;
-      
-      // 2. Draw current state to offscreen
-      offCtx.drawImage(ctx.canvas, 0, 0, bW, bH);
-      
-      // 3. Threshold Pass (High-Pass Filter)
-      const imageData = offCtx.getImageData(0, 0, bW, bH);
-      const data = imageData.data;
-      const threshold = params.bloomThreshold * 255;
-      
-      for (let i = 0; i < data.length; i += 4) {
-          // Luma
-          const r = data[i];
-          const g = data[i+1];
-          const b = data[i+2];
-          const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-          
-          if (luma < threshold) {
-              // Mask out darks
-              data[i] = 0;
-              data[i+1] = 0;
-              data[i+2] = 0;
-              // Keep alpha? 
-              // data[i+3] = 255; 
-          } else {
-              // Tint Halation (Red Shift)
-              // Boost Red, slightly reduce Blue
-              data[i] = Math.min(255, r * 1.2); 
-              data[i+1] = g * 0.9;
-              data[i+2] = b * 0.8;
-          }
-      }
-      offCtx.putImageData(imageData, 0, 0);
-      
-      // 4. Blur Pass
-      // Using context filter is faster than JS loop
-      const blurRadius = params.bloomRadius * 40; // Max 40px blur
-      offCtx.filter = `blur(${blurRadius}px)`;
-      // We need to draw the image onto itself to apply the filter? 
-      // Context filter applies to drawing operations. It doesn't filter existing pixels instantly.
-      // So we must draw the thresholded content again.
-      // Wait, we just did putImageData (which ignores filter?).
-      // Trick: Put the imageData into a temp 2nd canvas.
-      
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = bW;
-      tempCanvas.height = bH;
-      const tempCtx = tempCanvas.getContext('2d')!;
-      tempCtx.putImageData(imageData, 0, 0);
-      
-      offCtx.clearRect(0, 0, bW, bH);
-      offCtx.drawImage(tempCanvas, 0, 0); // Draws the high-pass
-      
-      // 5. Composite Pass (Bloom -> Main)
-      ctx.globalCompositeOperation = 'screen'; // or 'lighter'
-      ctx.globalAlpha = params.bloomIntensity;
-      
-      // Draw the blurred bloom on top
-      // Need to scale back up
-      ctx.drawImage(offCanvas, 0, 0, width, height);
-      
-      // RESET
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.globalAlpha = 1.0;
-      
-  }, []);
+  // --- OPTICS REMOVED ---
 
   // --- CORE EFFECTS ---
   const applyEffects = useCallback((imageDataObj: { width: number, height: number, data: Uint8ClampedArray }, params: GlitchParams) => {
@@ -396,16 +314,15 @@ export const useGlitchEngine = () => {
     const newImageData = new ImageData(outputData, width, height);
     ctx.putImageData(newImageData, 0, 0);
     
-    // --- OPTICS PASS ---
-    applyOptics(ctx, width, height, params);
+    // --- OPTICS PASS REMOVED ---
 
-    canvas.toBlob((blob) => {
-        if (!blob) return;
-        setGlitchedUrl(prev => {
-            if (prev) URL.revokeObjectURL(prev);
-            return URL.createObjectURL(blob);
-        });
-    }, 'image/png');
+     canvas.toBlob((blob) => {
+         if (!blob) return;
+         setGlitchedUrl(prev => {
+             if (prev) URL.revokeObjectURL(prev);
+             return URL.createObjectURL(blob);
+         });
+     }, 'image/png');
     
     // HOT SWAP AUDIO IF PLAYING
     if (audioSourceRef.current) { 
@@ -470,9 +387,6 @@ export const useGlitchEngine = () => {
                 displacement: 0, 
                 noise: 0, 
                 seed: '',
-                bloomThreshold: 0.5,
-                bloomIntensity: 0,
-                bloomRadius: 0
             });
             setStatus('ready');
         };
@@ -498,9 +412,6 @@ export const useGlitchEngine = () => {
           displacement: Math.random() * 0.4,
           noise: Math.random() * 0.4, 
           seed: '',
-          bloomThreshold: 0.2 + Math.random() * 0.5,
-          bloomIntensity: Math.random() * 1.5,
-          bloomRadius: Math.random() * 0.8 
       };
   }, []);
   

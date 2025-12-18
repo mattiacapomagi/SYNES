@@ -18,9 +18,6 @@ function App() {
     displacement: 0,
     noise: 0,
     seed: '',
-    bloomThreshold: 0.5,
-    bloomIntensity: 0,
-    bloomRadius: 0.24
   });
 
   // Theme State
@@ -113,11 +110,8 @@ function App() {
   const handleUpload = (file: File) => {
     setParams({ 
         displacement: 0, 
-        noise: 0, 
+        noise: 0,
         seed: '',
-        bloomThreshold: 0.5,
-        bloomIntensity: 0,
-        bloomRadius: 0.24
     }); // Reset params
     processImage(file);
   };
@@ -180,11 +174,8 @@ function App() {
   const handleReset = () => {
     const newParams = { 
         displacement: 0, 
-        noise: 0, 
+        noise: 0,
         seed: '',
-        bloomThreshold: 0.5,
-        bloomIntensity: 0,
-        bloomRadius: 0
     };
     setParams(newParams);
     reprocess(newParams);
@@ -343,6 +334,7 @@ function App() {
                             height={450} 
                             onInteraction={handleSpectrogramInteraction}
                             onInteractionEnd={handleSpectrogramEnd}
+                            isDark={isDark}
                         />
                         {/* Mobile Overlay Label */}
                         <div className="absolute top-2 right-2 text-[10px] md:hidden bg-white dark:bg-black text-primary px-1 border border-primary">SPECTRAL</div>
@@ -375,8 +367,6 @@ function App() {
                     glitchedUrl={glitchedUrl} 
                     mode={vizMode} 
                     onModeChange={setVizMode}
-                    params={params}
-                    onParamsChange={handleParamsChange}
                 />
             </div>
              {/* Save Buttons - Fixed Bottom Footer */}

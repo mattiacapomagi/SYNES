@@ -5,16 +5,18 @@ interface SpectrogramProps {
   height?: number;
   onInteraction?: (x: number, y: number) => void;
   onInteractionEnd?: () => void;
+  isDark: boolean;
 }
 
-export const Spectrogram = ({ data, height = 200, onInteraction, onInteractionEnd }: SpectrogramProps) => {
+export const Spectrogram = ({ data, height = 200, onInteraction, onInteractionEnd, isDark }: SpectrogramProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDragging = useRef(false);
 
   // Visual Cursor State
   // We track local coordinates for the UI feedback
   const [cursor, setCursor] = useState<{x: number, y: number} | null>(null);
-
+  
+  // ... pointer handlers ...
   const handlePointer = (e: React.PointerEvent) => {
       if (!isDragging.current || !onInteraction) return;
       
@@ -60,8 +62,8 @@ export const Spectrogram = ({ data, height = 200, onInteraction, onInteractionEn
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
 
-    // Dark background
-    ctx.fillStyle = '#000000';
+    // Dynamic Background
+    ctx.fillStyle = isDark ? '#000000' : '#ffffff';
     ctx.fillRect(0, 0, rect.width, height);
 
     if (data.length === 0) return;
@@ -75,6 +77,9 @@ export const Spectrogram = ({ data, height = 200, onInteraction, onInteractionEn
         const barHeight = percent * height;
         
         // Heatmap Color: Blue -> Red -> Yellow -> White
+        // In Light mode, we might want inverse? No, "spectral" usually implies dark bg.
+        // But requested is "background white".
+        // Let's keep hue but make it readable?
         const hue = 240 - (percent * 240); // Blue (240) to Red (0)
         ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
         
@@ -82,22 +87,22 @@ export const Spectrogram = ({ data, height = 200, onInteraction, onInteractionEn
         ctx.fillRect(i * barWidth, height - barHeight, barWidth + 1, barHeight);
     }
     
-    // Grid overlay
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    // Grid overlay - Invert for light mode
+    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
     for(let y = 0; y < height; y += 20) {
         ctx.fillRect(0, y, rect.width, 1);
     }
 
-  }, [data, height]);
+  }, [data, height, isDark]);
 
   if (!data) return (
-      <div className="w-full border border-white flex items-center justify-center opacity-30 bg-black" style={{ height }}>
-         <span className="text-xs uppercase text-white font-mono">[ WAITING FOR SIGNAL ]</span>
+      <div className={`w-full border border-primary flex items-center justify-center opacity-30 ${isDark ? 'bg-black text-white' : 'bg-white text-primary'}`} style={{ height }}>
+         <span className="text-xs uppercase font-mono font-bold">[ WAITING FOR SIGNAL ]</span>
       </div>
   );
 
   return (
-    <div className="relative w-full bg-black block select-none touch-none" style={{ height }}>
+    <div className={`relative w-full block select-none touch-none ${isDark ? 'bg-black' : 'bg-white'}`} style={{ height }}>
         <canvas 
             ref={canvasRef} 
             className="w-full h-full cursor-crosshair touch-none block"

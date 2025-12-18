@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import type { GlitchParams } from '../hooks/useGlitchEngine';
 
 interface VisualizerProps {
@@ -9,8 +9,7 @@ interface VisualizerProps {
   onParamsChange: (key: keyof GlitchParams, value: number) => void;
 }
 
-export const Visualizer = ({ glitchedUrl, mode, onModeChange, params, onParamsChange }: VisualizerProps) => {
-  const [showOptics, setShowOptics] = useState(false);
+export const Visualizer = ({ glitchedUrl, mode, onModeChange }: Pick<VisualizerProps, 'glitchedUrl' | 'mode' | 'onModeChange'>) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Effect to handle channel rendering
@@ -89,74 +88,8 @@ export const Visualizer = ({ glitchedUrl, mode, onModeChange, params, onParamsCh
         </div>
 
         {/* HUD Elements */}
-        {/* HUD Elements */}
-        {/* Top Left: Optics Controls */}
-        <div className="absolute top-0 left-0 m-4 bg-white/90 dark:bg-black/90 backdrop-blur-sm border border-primary/20 p-2">
-            <div className="flex items-center space-x-2 mb-1">
-                 {/* Optics Toggle as Main Label */}
-                 <button 
-                    onClick={() => setShowOptics(!showOptics)}
-                    className={`text-[10px] uppercase font-bold px-2 py-0.5 border border-primary ${
-                        showOptics ? 'bg-primary text-white dark:text-black' : 'text-primary hover:bg-primary/10'
-                    }`}
-                >
-                    EFFECTS
-                </button>
-            </div>
-
-            {showOptics && (
-                <div className="space-y-3 w-48 pt-2 border-t border-primary/20">
-                    {/* Intensity */}
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-[9px] uppercase text-primary/70">
-                            <span>Bloom</span>
-                            <span>{params.bloomIntensity?.toFixed(2)}</span>
-                        </div>
-                        <input
-                            type="range"
-                            min="0"
-                            max="2"
-                            step="0.01"
-                            value={params.bloomIntensity || 0}
-                            onChange={(e) => onParamsChange('bloomIntensity', parseFloat(e.target.value))}
-                            className="w-full h-1 bg-primary/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-primary"
-                        />
-                    </div>
-                    {/* Radius */}
-                    <div className="space-y-1">
-                         <div className="flex justify-between text-[9px] uppercase text-primary/70">
-                            <span>Radius</span>
-                            <span>{Math.max(0, (params.bloomRadius || 0.24) - 0.24).toFixed(2)}</span>
-                        </div>
-                        <input
-                            type="range"
-                            min="0.24"
-                            max="1"
-                            step="0.01"
-                            value={params.bloomRadius || 0.24}
-                            onChange={(e) => onParamsChange('bloomRadius', parseFloat(e.target.value))}
-                            className="w-full h-1 bg-primary/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-primary"
-                        />
-                    </div>
-                    {/* Threshold */}
-                    <div className="space-y-1">
-                         <div className="flex justify-between text-[9px] uppercase text-primary/70">
-                            <span>Threshold</span>
-                            <span>{params.bloomThreshold?.toFixed(2)}</span>
-                        </div>
-                         <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.01"
-                            value={params.bloomThreshold || 0}
-                            onChange={(e) => onParamsChange('bloomThreshold', parseFloat(e.target.value))}
-                            className="w-full h-1 bg-primary/20 appearance-none rounded-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:bg-primary"
-                        />
-                    </div>
-                </div>
-            )}
-        </div>
+        {/* Top Left: Removed Optics Controls as requested */}
+        <div className="absolute top-0 left-0 m-4"></div>
 
         <div className="absolute bottom-0 right-0 flex">
             {(['rgb', 'bw', 'r', 'g', 'b'] as const).map((m) => (
