@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { UploadZone } from './components/UploadZone';
 import { BlockifyEngine } from './components/BlockifyEngine';
 import { Controls } from './components/Controls';
 import { computeMosaicGrid, renderGridToCanvas, renderGridToSVG } from './utils/mosaicGenerator';
+import bricklabLogo from './assets/bricklab-logo.svg'; // Import moved logo
 import './index.css';
 
 function App() {

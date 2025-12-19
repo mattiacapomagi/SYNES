@@ -1,36 +1,39 @@
 # BRICKLAB
 
-BRICKLAB is a high-precision mosaic generator designed for creative professionals. It transforms digital imagery into geometric, vector-ready brick layouts, perfect for large-format printing, plotting, and architectural visualization.
-
-![BRICKLAB UI](https://placehold.co/800x400/000000/FFFFFF/png?text=BRICKLAB+UI)
+BRICKLAB is a high-precision mosaic generator designed to bridge the gap between pixel aesthetics and vector scalability. It transforms digital imagery into rigid, geometric brick layouts, optimized for professional workflows in large-format printing, plotting, and architectural visualization.
 
 ## FEATURES
 
 ### 🧱 Adaptive Grid Engine
 
-BRICKLAB's core engine automatically quantizes images into a variable-density grid. It calculates local color averages to construct a clean, brick-based reconstruction of your source material, preserving essential details while enforcing a rigid geometric aesthetic.
+At its core, BRICKLAB uses a custom quantization engine that maps source pixels to a variable-density grid. Unlike simple pixelation filters, this engine calculates the local color average within each "brick" cell using a weighted sampling method.
 
-### 🎛️ Precision Control
+- **Color Averaging**: Ensures true-to-life color reproduction even at low resolutions.
+- **Grid Alignment**: Forces every element into a perfect mathematical grid, eliminating anti-aliasing artifacts often found in raster resizing.
 
-- **Dynamic Density**: Fine-tune the grid resolution in real-time.
-- **Non-Destructive Workflow**: Full Undo/Redo support (`Cmd+Z`, `Shift+Cmd+Z`) for all density adjustments.
-- **Auto-Reset**: Instantly revert to default scaling with a single click.
+### 🎛️ Dynamic Precision Control
 
-### 🚀 Professional Export Pipeline
+The density system is non-linear, allowing for granular control where it matters most.
 
-BRICKLAB is built for production:
+- **Real-Time Block Sizing**: Ranging from abstract 8-bit interpretations to fine-detailed mosaics.
+- **Robust History State**: Every adjustment to the block size is pushed to a history stack. You can Experiment fearlessly using `Cmd+Z` (Undo) and `Shift+Cmd+Z` (Redo) to navigate your design process.
+- **Instant Reset**: A dedicated "RESET" function immediately snaps the engine back to its calibrated default (Block Size: 50), providing a quick baseline.
 
-- **High-Res PNG**: Automatic upscaling ensures your outputs are print-ready (minimum 5000px height), regardless of input size.
-- **Vector SVG**: Exports resolution-independent SVG paths, optimized for vinyl cutters, pen plotters (Axidraw), and vector software (Illustrator/Figma).
-- **Smart Filenaming**: Files are automatically tagged with a clean timestamp (`BRICKLAB YYYY-MM-DD HH.mm.ss`) for easy asset management.
+### 🚀 Production-Ready Export Pipeline
 
-### 📂 Broad Format Support
+BRICKLAB generates assets that are ready for immediate professional use.
 
-Drag and drop any major format: `JPG`, `PNG`, `GIF`, `WEBP`, `TIFF`, and `HEIC` (Apple ecosystem support included).
+- **High-Res PNG**: The raster export pipeline automatically upscales the generated grid to a minimum height of **5000px**. This guarantees sharp edges for large prints (posters, billboards) without pixelation blur.
+- **Resolution-Independent SVG**: The vector export is mathematically generated. Each "brick" is written as a distinct SVG `<rect>` element. This file is clean, layer-free, and perfect for:
+  - **Pen Plotters (e.g., Axidraw)**: Clean paths for physical drawing.
+  - **Vinyl Cutters**: distinct shapes for weeding.
+  - **Vector Software**: Fully editable in Adobe Illustrator or Figma.
+- **Smart Asset Tagging**: Exports are automatically named with a semantic timestamp format (`BRICKLAB YYYY-MM-DD HH.mm.ss`), keeping your project folder organized.
 
-### ⚡ Brutalist Interface
+### 📂 Universal Format Support
 
-A stripped-back, distraction-free environment aimed purely at creation. High-contrast visibility, fixed tools, and a focus on the canvas.
+The ingestion engine handles a wide array of formats, including modern web standards and professional image types:
+`JPG`, `PNG`, `GIF`, `WEBP`, `TIFF`, and `HEIC` (native Apple photo format support via on-the-fly conversion).
 
 ---
 
