@@ -1,50 +1,37 @@
 # BRICKLAB
 
-BRICKLAB is a specialized brutalist mosaic generator that transforms images into high-precision brick/grid art. It is designed for creative professionals who need vector-ready or print-ready outputs of pixelated/reconstructed imagery.
+BRICKLAB is a high-precision mosaic generator designed for creative professionals. It transforms digital imagery into geometric, vector-ready brick layouts, perfect for large-format printing, plotting, and architectural visualization.
 
-![BRICKLAB UI](https://placehold.co/800x400/000000/FFFFFF/png?text=BRICKLAB+PREVIEW)
+![BRICKLAB UI](https://placehold.co/800x400/000000/FFFFFF/png?text=BRICKLAB+UI)
 
-## Features
+## FEATURES
 
-- **Drag & Drop Workspace**: Supports JPG, PNG, GIF, WEBP, TIFF, and HEIC formats.
-- **Adaptive Grid Engine**: Automatically averages pixel colors to create a clean, geometric reconstruction.
-- **Precision Control**:
-  - **Block Density Slider**: Fine-tune the grid resolution (mapped from UI 0-100 to robust internal values).
-  - **Auto-Reset**: Quickly revert to standard density.
-  - **Undo/Redo**: Full history support for density adjustments via `Cmd+Z` / `Shift+Cmd+Z`.
-- **Professional Export**:
-  - **High-Res PNG**: Upscales output to a minimum of 5000px height for large-format printing.
-  - **Vector SVG**: Exports pure SVG paths for plotters, vinyl cutters, or further vector editing.
-- **Brutalist UI**: A stripped-back, high-contrast interface focused purely on the workflow.
+### 🧱 Adaptive Grid Engine
 
-## Technology Stack
+BRICKLAB's core engine automatically quantizes images into a variable-density grid. It calculates local color averages to construct a clean, brick-based reconstruction of your source material, preserving essential details while enforcing a rigid geometric aesthetic.
 
-- **Framework**: React + TypeScript + Vite
-- **Styling**: Tailwind CSS
-- **Processing**:
-  - `heic2any`: For Apple ecosystem image support.
-  - HTML5 Canvas: For real-time grid computation and rendering.
+### 🎛️ Precision Control
 
-## Development
+- **Dynamic Density**: Fine-tune the grid resolution in real-time.
+- **Non-Destructive Workflow**: Full Undo/Redo support (`Cmd+Z`, `Shift+Cmd+Z`) for all density adjustments.
+- **Auto-Reset**: Instantly revert to default scaling with a single click.
 
-1. **Install Dependencies**:
+### 🚀 Professional Export Pipeline
 
-   ```bash
-   npm install
-   ```
+BRICKLAB is built for production:
 
-2. **Run Development Server**:
+- **High-Res PNG**: Automatic upscaling ensures your outputs are print-ready (minimum 5000px height), regardless of input size.
+- **Vector SVG**: Exports resolution-independent SVG paths, optimized for vinyl cutters, pen plotters (Axidraw), and vector software (Illustrator/Figma).
+- **Smart Filenaming**: Files are automatically tagged with a clean timestamp (`BRICKLAB YYYY-MM-DD HH.mm.ss`) for easy asset management.
 
-   ```bash
-   npm run dev
-   ```
+### 📂 Broad Format Support
 
-3. **Build for Production**:
-   ```bash
-   npm run build
-   ```
+Drag and drop any major format: `JPG`, `PNG`, `GIF`, `WEBP`, `TIFF`, and `HEIC` (Apple ecosystem support included).
 
-## License
+### ⚡ Brutalist Interface
 
-Private / Proprietary.
-Designed by Mattia Capomagi.
+A stripped-back, distraction-free environment aimed purely at creation. High-contrast visibility, fixed tools, and a focus on the canvas.
+
+---
+
+**Mattia Capomagi 2025**
