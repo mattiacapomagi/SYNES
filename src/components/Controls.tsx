@@ -8,21 +8,36 @@ interface ControlsProps {
 }
 
 export const Controls = ({ blockSize, setBlockSize, onDownload, onDownloadSVG }: ControlsProps) => {
+  
+  // Mapping logic
+  // Internal: 15 (High Density) <-> 50 (Low Density)
+  // UI: 0 (Low Density/50) <-> 100 (High Density/15)
+  // Formula: Internal = 50 - (UI / 100) * (50 - 15) = 50 - (UI * 0.35)
+  // UI = (50 - Internal) / 0.35
+
+  const uiValue = Math.round((50 - blockSize) / 0.35);
+
+  const handleSliderChange = (val: number) => {
+      // Map UI (0-100) to Internal (50-15)
+      const internal = 50 - (val * 0.35);
+      setBlockSize(Math.max(15, Math.min(50, internal)));
+  };
+
   return (
     <div className="bg-white border-[3px] border-black p-6 flex flex-col md:flex-row gap-6 items-center justify-between shadow-brutal">
         
         {/* Slider Section */}
         <div className="flex-1 w-full space-y-4">
             <div className="font-bold text-black text-sm uppercase tracking-tighter">
-                BLOCK DENSITY: {blockSize}
+                BLOCK DENSITY: {uiValue}
             </div>
             <div className="relative h-8 flex items-center">
                 <input 
                     type="range"
-                    min="15"
+                    min="0"
                     max="100"
-                    value={blockSize}
-                    onChange={(e) => setBlockSize(parseInt(e.target.value))}
+                    value={uiValue}
+                    onChange={(e) => handleSliderChange(parseInt(e.target.value))}
                     className="w-full"
                 />
             </div>

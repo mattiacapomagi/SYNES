@@ -60,8 +60,9 @@ function App() {
     renderGridToCanvas(eCtx, grid, exportBlockSize);
     
     // 6. Download
+    const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const link = document.createElement('a');
-    link.download = `bricklab-export-highres-${Date.now()}.png`;
+    link.download = `BRICKLAB_EXPORT_${dateStr}.png`;
     link.href = exportCanvas.toDataURL('image/png');
     link.click();
   };
@@ -97,14 +98,15 @@ function App() {
       const svgString = renderGridToSVG(grid, previewW, previewH);
       
       const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       const link = document.createElement('a');
-      link.download = `bricklab-export-${Date.now()}.svg`;
+      link.download = `BRICKLAB_EXPORT_${dateStr}.png`;
       link.href = URL.createObjectURL(blob);
       link.click();
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-industrial-bg font-mono selection:bg-industrial-accent selection:text-white">
+    <div className="min-h-screen bg-industrial-bg font-mono selection:bg-industrial-accent selection:text-white flex flex-col">
       {/* Header */}
       <nav className="bg-white border-b-[3px] border-black sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -115,29 +117,27 @@ function App() {
           </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="max-w-[1400px] mx-auto px-6 pt-6 space-y-6">
-          
-          {/* 1. Upload Section */}
-          <section className={sourceImage ? '' : 'py-20'}>
-               {!sourceImage ? (
-                   <div className="max-w-xl mx-auto">
+           {/* 1. Upload Section */}
+           {!sourceImage && (
+               <section className="flex-grow flex flex-col items-center justify-center min-h-[calc(100vh-140px)]">
+                   <div className="w-full h-full flex-grow">
                        <UploadZone onUpload={setSourceImage} />
                    </div>
-               ) : (
-                   <div>
-                       <button 
+               </section>
+           )}
+
+           {/* 2. Workspace */}
+           {sourceImage && (
+             <main className="max-w-[1400px] mx-auto px-6 pt-6 space-y-6 flex-grow w-full">
+                <div className="flex justify-end mb-4">
+                        <button 
                             onClick={() => setSourceImage(null)}
                             className="bg-black text-white text-xs font-bold px-3 py-1 hover:bg-industrial-accent transition-colors uppercase tracking-widest border-[2px] border-black"
-                       >
-                           ← RESET
-                       </button>
-                   </div>
-               )}
-          </section>
+                        >
+                            ← RESET
+                        </button>
+                </div>
 
-          {/* 2. Workspace */}
-          {sourceImage && (
             <div className="flex flex-col md:flex-row gap-6 items-start animate-fade-in-up">
                 
                 {/* Canvas Engine (Left/Top) */}
@@ -150,22 +150,21 @@ function App() {
                     </div>
                 </div>
 
-                {/* Controls (Right/Side) */}
-                <div className="w-full md:w-80 md:sticky md:top-24 shrink-0">
-                    <Controls 
-                        blockSize={blockSize}
-                        setBlockSize={setBlockSize}
-                        onDownload={handleDownloadPNG}
-                        onDownloadSVG={handleDownloadSVG}
-                    />
-                </div>
-            </div>
+                 {/* Controls (Right/Side) */}
+                 <div className="w-full md:w-80 md:sticky md:top-24 shrink-0">
+                     <Controls 
+                         blockSize={blockSize}
+                         setBlockSize={setBlockSize}
+                         onDownload={handleDownloadPNG}
+                         onDownloadSVG={handleDownloadSVG}
+                     />
+                 </div>
+             </div>
+           </main>
           )}
-
-      </main>
       
       {/* Brutalist Footer */}
-      <footer className="w-full text-center py-6 text-[10px] font-bold uppercase opacity-50 mix-blend-exclusion">
+      <footer className="w-full text-center py-6 text-[10px] font-bold uppercase opacity-50 mix-blend-exclusion mt-auto">
          Mattia Capomagi 2025
       </footer>
     </div>

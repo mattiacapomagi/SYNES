@@ -55,7 +55,7 @@ export const UploadZone = ({ onUpload }: UploadZoneProps) => {
         onDrop={onDrop}
         onClick={() => document.getElementById('file-upload')?.click()}
         className={`
-            border-[3px] p-12 text-center cursor-pointer transition-all duration-0
+            border-[3px] p-12 text-center cursor-pointer transition-all duration-0 w-full h-full flex items-center justify-center min-h-[50vh]
             ${isDragActive 
                 ? 'border-industrial-accent bg-industrial-accent/10' 
                 : 'border-black hover:bg-white bg-industrial-bg'
