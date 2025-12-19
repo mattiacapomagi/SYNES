@@ -55,7 +55,7 @@ export const UploadZone = ({ onUpload }: UploadZoneProps) => {
         onDrop={onDrop}
         onClick={() => document.getElementById('file-upload')?.click()}
         className={`
-            border-[3px] p-12 text-center cursor-pointer transition-all duration-0 w-full h-full flex items-center justify-center min-h-[50vh]
+            border-[3px] p-12 text-center cursor-pointer transition-all duration-0 w-full h-full flex items-center justify-center
             ${isDragActive 
                 ? 'border-industrial-accent bg-industrial-accent/10' 
                 : 'border-black hover:bg-white bg-industrial-bg'
@@ -70,7 +70,7 @@ export const UploadZone = ({ onUpload }: UploadZoneProps) => {
             </div>
             
             <div className="space-y-2">
-                <h2 className="text-2xl font-black">DRAG AND DROP / CLICK</h2>
+                <h2 className="text-4xl font-black tracking-tighter">DROP / CLICK</h2>
                 <p className="text-[10px] opacity-50 font-medium">JPG / PNG / GIF / WEBP / HEIC / TIFF</p>
             </div>
         </div>
