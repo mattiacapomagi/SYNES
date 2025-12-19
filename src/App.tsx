@@ -48,9 +48,6 @@ function App() {
                        >
                            ← RESET SOURCE
                        </button>
-                       <div className="text-xs font-mono opacity-50 uppercase">
-                           PROCESSING UNIT ACTIVE
-                       </div>
                    </div>
                )}
           </section>

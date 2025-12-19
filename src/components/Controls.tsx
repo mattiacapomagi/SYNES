@@ -12,9 +12,8 @@ export const Controls = ({ blockSize, setBlockSize, onDownload }: ControlsProps)
         
         {/* Slider Section */}
         <div className="flex-1 w-full space-y-4">
-            <div className="flex justify-between font-bold text-black text-xs uppercase tracking-tighter">
-                <span>BLOCK DENSITY</span>
-                <span className="bg-black text-white px-1">PX {blockSize}</span>
+            <div className="font-bold text-black text-sm uppercase tracking-tighter">
+                BLOCK DENSITY: {blockSize}
             </div>
             <div className="relative h-8 flex items-center">
                 <input 
@@ -26,10 +25,6 @@ export const Controls = ({ blockSize, setBlockSize, onDownload }: ControlsProps)
                     className="w-full"
                 />
             </div>
-            <div className="flex justify-between text-[10px] text-black font-bold uppercase">
-                <span>[ HIGH RES ]</span>
-                <span>[ LOW RES ]</span>
-            </div>
         </div>
 
         {/* Action Section */}
@@ -38,7 +33,7 @@ export const Controls = ({ blockSize, setBlockSize, onDownload }: ControlsProps)
                 onClick={onDownload}
                 className="w-full md:w-auto px-8 py-4 bg-industrial-accent hover:bg-black text-white font-bold border-[3px] border-black shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active hover:translate-x-[2px] hover:translate-y-[2px] transition-all uppercase tracking-tight text-sm"
             >
-                EXECUTE EXPORT
+                EXPORT
             </button>
         </div>
 
