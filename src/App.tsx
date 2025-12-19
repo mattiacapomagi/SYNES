@@ -32,7 +32,7 @@ function App() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 pt-12 space-y-12">
+      <main className="max-w-[1400px] mx-auto px-6 pt-6 space-y-6">
           
           {/* 1. Upload Section */}
           <section className={sourceImage ? '' : 'py-20'}>
@@ -54,29 +54,33 @@ function App() {
 
           {/* 2. Workspace */}
           {sourceImage && (
-            <div className="space-y-8 animate-fade-in-up">
+            <div className="flex flex-col md:flex-row gap-6 items-start animate-fade-in-up">
                 
-                {/* Canvas Engine */}
-                <div className="border-[3px] border-black bg-white shadow-brutal p-2">
-                    <BlockifyEngine 
-                        image={sourceImage}
-                        blockSize={blockSize}
-                    />
+                {/* Canvas Engine (Left/Top) */}
+                <div className="flex-1 border-[3px] border-black bg-white shadow-brutal p-2 overflow-hidden flex items-center justify-center bg-dots-pattern">
+                    <div className="max-h-[75vh] w-full flex items-center justify-center overflow-auto">
+                        <BlockifyEngine 
+                            image={sourceImage}
+                            blockSize={blockSize}
+                        />
+                    </div>
                 </div>
 
-                {/* Controls */}
-                <Controls 
-                    blockSize={blockSize}
-                    setBlockSize={setBlockSize}
-                    onDownload={handleDownload}
-                />
+                {/* Controls (Right/Side) */}
+                <div className="w-full md:w-80 md:sticky md:top-24 shrink-0">
+                    <Controls 
+                        blockSize={blockSize}
+                        setBlockSize={setBlockSize}
+                        onDownload={handleDownload}
+                    />
+                </div>
             </div>
           )}
 
       </main>
       
       {/* Brutalist Footer */}
-      <footer className="fixed bottom-4 right-6 text-[10px] font-bold uppercase opacity-30 mix-blend-exclusion pointer-events-none">
+      <footer className="w-full text-center py-6 text-[10px] font-bold uppercase opacity-50 mix-blend-exclusion">
          Mattia Capomagi 2025
       </footer>
     </div>
