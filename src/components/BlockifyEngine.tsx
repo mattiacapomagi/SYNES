@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { drawBrick } from '../utils/brickRenderer';
+import { computeMosaicGrid, renderGridToCanvas } from '../utils/mosaicGenerator';
 
 interface BlockifyEngineProps {
   image: HTMLImageElement | null;
@@ -9,7 +9,6 @@ interface BlockifyEngineProps {
 export const BlockifyEngine = ({ image, blockSize }: BlockifyEngineProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
      if (!image || !canvasRef.current) return;
@@ -21,70 +20,52 @@ export const BlockifyEngine = ({ image, blockSize }: BlockifyEngineProps) => {
          
          if (!ctx) return;
 
-         // 1. Setup Canvas Dimensions matches Image
-         // Limit max size for performance (e.g., max 2000px)
+         // 1. Compute Grid
+         // We need to limit the analysis size for performance, but we must use the SAME logic as export
+         // so let's stick to the engine logic.
+         // Actually, the engine's computeMosaicGrid takes the image directly.
+         // We need to handle the display sizing (width/height) here for the canvas element,
+         // but the rendering draws pixels.
+         
+         // Calculate display dimensions based on block size (round to nearest)
          let w = image.width;
          let h = image.height;
-         const MAX_SIZE = 1500;
-         if (w > MAX_SIZE || h > MAX_SIZE) {
-             const ratio = w / h;
-             if (w > h) { w = MAX_SIZE; h = MAX_SIZE / ratio; }
-             else { h = MAX_SIZE; w = MAX_SIZE * ratio; }
+         const MAX_DISPLAY = 1500;
+         if (w > MAX_DISPLAY || h > MAX_DISPLAY) {
+              const ratio = w / h;
+              if (w > h) { w = MAX_DISPLAY; h = MAX_DISPLAY / ratio; }
+              else { h = MAX_DISPLAY; w = MAX_DISPLAY * ratio; }
          }
          
-         // Round to nearest block size to avoid partial jagged edges
+         // Ensure divisible by block size
          w = Math.floor(w / blockSize) * blockSize;
          h = Math.floor(h / blockSize) * blockSize;
-
+         
          canvas.width = w;
          canvas.height = h;
-         setDimensions({ width: w, height: h });
+
+         // Scale image to this size for processing?
+         // Our computeMosaicGrid uses the raw image. If we pass the raw image, it calculates blocks based on raw pixels.
+         // If `blockSize` is for the display version, we need to match.
+         // Wait. `blockSize` is "15px" etc.
+         // If we allow the users to set block size based on the ORIGINAL image, that's one thing.
+         // But usually "Block Size" in these apps refers to output granularity.
+         // If we resize the image for display, effective block size changes.
+         // Let's create a temporary scaled image for the engine to consume if we are downscaling.
          
-         // 2. Draw original image to get pixel data
-         // We draw it small first? NO, simpler to draw full then sample.
-         // Actually, drawing it scaled down to grid size is a fast way to avg colors.
+         const analysisImage = document.createElement('canvas');
+         analysisImage.width = w;
+         analysisImage.height = h;
+         const aCtx = analysisImage.getContext('2d')!;
+         aCtx.drawImage(image, 0, 0, w, h);
          
-         const columns = Math.ceil(w / blockSize);
-         const rows = Math.ceil(h / blockSize);
+         // Use the temp canvas as image source (it acts like an HTMLCanvasElement which is valid for drawImage)
+         // We cast to any or HTMLImageElement-like
+         const grid = computeMosaicGrid(analysisImage as unknown as HTMLImageElement, blockSize);
          
-         // Helper canvas for sampling
-         const helpCanvas = document.createElement('canvas');
-         helpCanvas.width = columns;
-         helpCanvas.height = rows;
-         const helpCtx = helpCanvas.getContext('2d')!;
-         
-         // Draw image scaled down. Browser handles averaging (bilinear).
-         helpCtx.drawImage(image, 0, 0, columns, rows);
-         
-         // Get the pixel data of the tiny image
-         const pixelData = helpCtx.getImageData(0, 0, columns, rows).data;
-         
-         // 3. Render Bricks on Main Canvas
-         // Clear
+         // Render
          ctx.clearRect(0, 0, w, h);
-         
-         // Iterate
-         for (let r = 0; r < rows; r++) {
-             for (let c = 0; c < columns; c++) {
-                 // Pixel index
-                 const i = (r * columns + c) * 4;
-                 const red = pixelData[i];
-                 const green = pixelData[i+1];
-                 const blue = pixelData[i+2];
-                 const alpha = pixelData[i+3];
-                 
-                 // Skip transparent-ish
-                 if (alpha < 50) continue;
-                 
-                 drawBrick(
-                     ctx,
-                     c * blockSize,
-                     r * blockSize,
-                     blockSize,
-                     { r: red, g: green, b: blue }
-                 );
-             }
-         }
+         renderGridToCanvas(ctx, grid, blockSize);
          
          setIsProcessing(false);
      };
