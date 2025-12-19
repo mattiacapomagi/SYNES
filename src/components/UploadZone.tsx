@@ -68,10 +68,10 @@ export const UploadZone = ({ onUpload }: UploadZoneProps) => {
             <div className={`mx-auto w-12 h-12 border-[3px] border-black flex items-center justify-center text-3xl transition-transform ${isDragActive ? 'rotate-90 bg-industrial-accent text-white' : 'bg-white text-black'}`}>
                +
             </div>
-            <h2 className="text-xl">INPUT SOURCE</h2>
-            <div className="space-y-1">
-                <p className="text-sm font-bold">[ DRAG ND DROP / CLICK ]</p>
-                <p className="text-[10px] opacity-50">JPG / PNG / GIF / WEBP / HEIC / TIFF</p>
+            
+            <div className="space-y-2">
+                <h2 className="text-2xl font-black">DRAG AND DROP / CLICK</h2>
+                <p className="text-[10px] opacity-50 font-medium">JPG / PNG / GIF / WEBP / HEIC / TIFF</p>
             </div>
         </div>
     </div>

@@ -26,6 +26,7 @@ function App() {
           <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
               <div className="flex items-center gap-4">
                   <img src="/bricklab-logo.svg" alt="BRICKLAB LOGO" className="h-12 w-auto" />
+                  <span className="text-3xl font-bold text-industrial-accent uppercase tracking-tighter pt-1">BRICKLAB</span>
               </div>
           </div>
       </nav>
