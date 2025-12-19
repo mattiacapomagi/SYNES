@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UploadZone } from './components/UploadZone';
 import { BlockifyEngine } from './components/BlockifyEngine';
 import { Controls } from './components/Controls';
@@ -7,7 +7,96 @@ import './index.css';
 
 function App() {
   const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
-  const [blockSize, setBlockSize] = useState<number>(20);
+  
+  // Undo/Redo Logic for Block Size
+  // Default Internal 50 (UI 0)
+  const [history, setHistory] = useState<{ past: number[], present: number, future: number[] }>({
+      past: [],
+      present: 50,
+      future: []
+  });
+  
+  const blockSize = history.present;
+  
+  const setBlockSize = (newSize: number, addToHistory = false) => {
+      setHistory(curr => {
+          if (curr.present === newSize) return curr;
+          if (addToHistory) {
+              return {
+                  past: [...curr.past, curr.present],
+                  present: newSize,
+                  future: []
+              };
+          } else {
+              // Update present without pushing (for dragging, handled later?)
+              // Ideally for dragging we update visual but only push on commit.
+              // For simplicity, let's just update present here.
+              // If we want genuine undo for dragging, we need onMouseUp to commit.
+              // Let's rely on the Controls passing a flag or handle "commit" separarely.
+              // Actually, simplified: every discrete set pushes? 
+              // No, dragging creates 100 updates.
+              return { ...curr, present: newSize };
+          }
+      });
+  };
+
+
+  
+  // Let's try a simpler approach compatible with standard undo/redo patterns.
+  // We'll use a specific function for "Committing" a change.
+  // The slider onChange updates `present`. 
+  // We need `onAfterChange` or `onMouseUp` from Controls to trigger "snapshot".
+  
+  const undo = () => {
+      setHistory(curr => {
+          if (curr.past.length === 0) return curr;
+          const previous = curr.past[curr.past.length - 1];
+          const newPast = curr.past.slice(0, curr.past.length - 1);
+          return {
+              past: newPast,
+              present: previous,
+              future: [curr.present, ...curr.future]
+          };
+      });
+  };
+
+  const redo = () => {
+      setHistory(curr => {
+          if (curr.future.length === 0) return curr;
+          const next = curr.future[0];
+          const newFuture = curr.future.slice(1);
+          return {
+              past: [...curr.past, curr.present],
+              present: next,
+              future: newFuture
+          };
+      });
+  };
+
+  // Snapshot function to be called before a batch of changes (e.g. drag start)
+  const snapshot = () => {
+      setHistory(curr => ({
+          ...curr,
+          past: [...curr.past, curr.present]
+      }));
+  };
+
+  // Keyboard Listeners
+  useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+              e.preventDefault();
+              if (e.shiftKey) {
+                  redo();
+              } else {
+                  undo();
+              }
+          }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
 
   const handleDownloadPNG = () => {
     if (!sourceImage) return;
@@ -60,9 +149,11 @@ function App() {
     renderGridToCanvas(eCtx, grid, exportBlockSize);
     
     // 6. Download
-    const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '.');
     const link = document.createElement('a');
-    link.download = `BRICKLAB_EXPORT_${dateStr}.png`;
+    link.download = `BRICKLAB ${dateStr} ${timeStr}.png`;
     link.href = exportCanvas.toDataURL('image/png');
     link.click();
   };
@@ -98,9 +189,11 @@ function App() {
       const svgString = renderGridToSVG(grid, previewW, previewH);
       
       const blob = new Blob([svgString], { type: 'image/svg+xml' });
-      const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '.');
       const link = document.createElement('a');
-      link.download = `BRICKLAB_EXPORT_${dateStr}.svg`;
+      link.download = `BRICKLAB ${dateStr} ${timeStr}.svg`;
       link.href = URL.createObjectURL(blob);
       link.click();
   };
@@ -109,18 +202,21 @@ function App() {
     <div className="min-h-screen bg-industrial-bg font-mono selection:bg-industrial-accent selection:text-white flex flex-col">
       {/* Header */}
       <nav className="bg-white border-b-[3px] border-black sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                  <img src="/bricklab-logo.svg" alt="BRICKLAB LOGO" className="h-12 w-auto" />
-                  <span className="text-3xl font-bold text-industrial-accent uppercase tracking-tighter pt-1">BRICKLAB</span>
+          <div className="max-w-6xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
+              <div className="flex items-center gap-2 md:gap-4">
+                  <img src="/bricklab-logo.svg" alt="BRICKLAB LOGO" className="h-8 md:h-12 w-auto" />
+                  <span className="text-lg md:text-3xl font-bold text-industrial-accent uppercase tracking-tighter">BRICKLAB</span>
+              </div>
+              <div className="text-[10px] md:text-sm font-normal uppercase tracking-widest opacity-50 flex items-center h-full whitespace-nowrap">
+                  Mattia Capomagi 2025
               </div>
           </div>
       </nav>
 
            {/* 1. Upload Section */}
            {!sourceImage && (
-               <section className="flex-grow flex flex-col items-center justify-center min-h-[calc(100vh-140px)]">
-                   <div className="w-full h-full flex-grow">
+               <section className="flex-grow flex flex-col w-full">
+                   <div className="flex-grow w-full h-[calc(100vh-140px)]">
                        <UploadZone onUpload={setSourceImage} />
                    </div>
                </section>
@@ -128,8 +224,8 @@ function App() {
 
            {/* 2. Workspace */}
            {sourceImage && (
-             <main className="max-w-[1400px] mx-auto px-6 pt-6 space-y-6 flex-grow w-full">
-                <div className="flex justify-end mb-4">
+             <main className="max-w-[1400px] mx-auto px-6 pt-6 space-y-6 flex-grow w-full pb-12">
+                <div className="flex justify-start mb-4">
                         <button 
                             onClick={() => setSourceImage(null)}
                             className="bg-black text-white text-xs font-bold px-3 py-1 hover:bg-industrial-accent transition-colors uppercase tracking-widest border-[2px] border-black"
@@ -151,22 +247,22 @@ function App() {
                 </div>
 
                  {/* Controls (Right/Side) */}
-                 <div className="w-full md:w-80 md:sticky md:top-24 shrink-0">
-                     <Controls 
-                         blockSize={blockSize}
-                         setBlockSize={setBlockSize}
-                         onDownload={handleDownloadPNG}
-                         onDownloadSVG={handleDownloadSVG}
-                     />
+                 <div className="w-full md:w-96 md:sticky md:top-24 shrink-0">
+                      <Controls 
+                          blockSize={blockSize}
+                          setBlockSize={(val) => setBlockSize(val)}
+                          onSnapshot={snapshot}
+                          onReset={() => {
+                              snapshot();
+                              setBlockSize(50);
+                          }}
+                          onDownload={handleDownloadPNG}
+                          onDownloadSVG={handleDownloadSVG}
+                      />
                  </div>
              </div>
            </main>
           )}
-      
-      {/* Brutalist Footer */}
-      <footer className="w-full text-center py-6 text-[10px] font-bold uppercase opacity-50 mix-blend-exclusion mt-auto">
-         Mattia Capomagi 2025
-      </footer>
     </div>
   )
 }

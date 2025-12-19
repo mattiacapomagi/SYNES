@@ -1,13 +1,15 @@
-import React from 'react';
+
 
 interface ControlsProps {
   blockSize: number;
   setBlockSize: (s: number) => void;
+  onSnapshot: () => void;
+  onReset: () => void;
   onDownload: () => void;
   onDownloadSVG: () => void;
 }
 
-export const Controls = ({ blockSize, setBlockSize, onDownload, onDownloadSVG }: ControlsProps) => {
+export const Controls = ({ blockSize, setBlockSize, onSnapshot, onReset, onDownload, onDownloadSVG }: ControlsProps) => {
   
   // Mapping logic
   // Internal: 15 (High Density) <-> 50 (Low Density)
@@ -28,8 +30,16 @@ export const Controls = ({ blockSize, setBlockSize, onDownload, onDownloadSVG }:
         
         {/* Slider Section */}
         <div className="flex-1 w-full space-y-4">
-            <div className="font-bold text-black text-sm uppercase tracking-tighter">
-                BLOCK DENSITY: {uiValue}
+            <div className="flex justify-between items-center">
+                <div className="font-bold text-black text-sm uppercase tracking-tighter">
+                    BLOCK DENSITY: {uiValue}
+                </div>
+                <button 
+                    onClick={onReset}
+                    className="text-[10px] font-bold border border-black px-2 hover:bg-black hover:text-white transition-colors"
+                >
+                    RESET
+                </button>
             </div>
             <div className="relative h-8 flex items-center">
                 <input 
@@ -37,6 +47,7 @@ export const Controls = ({ blockSize, setBlockSize, onDownload, onDownloadSVG }:
                     min="0"
                     max="100"
                     value={uiValue}
+                    onPointerDown={onSnapshot}
                     onChange={(e) => handleSliderChange(parseInt(e.target.value))}
                     className="w-full"
                 />

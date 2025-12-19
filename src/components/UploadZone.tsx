@@ -8,7 +8,7 @@ interface UploadZoneProps {
 export const UploadZone = ({ onUpload }: UploadZoneProps) => {
   const [isDragActive, setIsDragActive] = useState(false);
 
-  const handleFile = async (file: File) => {
+  const handleFile = useCallback(async (file: File) => {
       let processFile = file;
 
       // HEIC/HEIF Conversion
@@ -35,13 +35,13 @@ export const UploadZone = ({ onUpload }: UploadZoneProps) => {
       img.onload = () => onUpload(img);
       img.onerror = () => alert("INVALID IMAGE FORMAT");
       img.src = URL.createObjectURL(processFile);
-  };
+  }, [onUpload]);
 
   const onDrop = useCallback((e: React.DragEvent) => {
       e.preventDefault();
       setIsDragActive(false);
       if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]);
-  }, []);
+  }, [handleFile]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files?.[0]) handleFile(e.target.files[0]);
@@ -55,19 +55,17 @@ export const UploadZone = ({ onUpload }: UploadZoneProps) => {
         onDrop={onDrop}
         onClick={() => document.getElementById('file-upload')?.click()}
         className={`
-            border-[3px] p-12 text-center cursor-pointer transition-all duration-0 w-full h-full flex items-center justify-center
+            text-center cursor-pointer transition-all duration-0 w-full h-full flex items-center justify-center
             ${isDragActive 
-                ? 'border-industrial-accent bg-industrial-accent/10' 
-                : 'border-black hover:bg-white bg-industrial-bg'
+                ? 'bg-industrial-accent/10' 
+                : 'hover:bg-white/50'
             }
         `}
     >
         <input type="file" id="file-upload" className="hidden" accept="image/*,.heic,.heif,.tiff,.tif,.webp" onChange={onChange}/>
         
         <div className="space-y-4 pointer-events-none uppercase font-bold tracking-tighter">
-            <div className={`mx-auto w-12 h-12 border-[3px] border-black flex items-center justify-center text-3xl transition-transform ${isDragActive ? 'rotate-90 bg-industrial-accent text-white' : 'bg-white text-black'}`}>
-               +
-            </div>
+
             
             <div className="space-y-2">
                 <h2 className="text-4xl font-black tracking-tighter">DROP / CLICK</h2>
