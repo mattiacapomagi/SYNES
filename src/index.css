@@ -26,7 +26,12 @@
 body {
   background-color: #e5e5e5;
   font-family: "PPMonumentNormal", sans-serif;
+  cursor: url('/cursor.svg'), auto;
 }
+
+/* Apply cursor to interactive elements too to ensure it persists */
+a, button, input, select, textarea, label {
+  cursor: url('/cursor.svg'), pointer;
 
 /* Custom Range Slider - Raw Industrial Style */
 input[type="range"] {
