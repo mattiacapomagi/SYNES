@@ -32,21 +32,21 @@ export const UploadZone = ({ onUpload }: UploadZoneProps) => {
         onDrop={onDrop}
         onClick={() => document.getElementById('file-upload')?.click()}
         className={`
-            border-4 border-dashed rounded-3xl p-12 text-center cursor-pointer transition-all transform duration-200
+            border-[3px] p-12 text-center cursor-pointer transition-all duration-0
             ${isDragActive 
-                ? 'border-brick-blue bg-brick-blue/10 scale-102 shadow-tray' 
-                : 'border-slate-300 hover:border-brick-blue hover:bg-slate-100'
+                ? 'border-industrial-accent bg-industrial-accent/10' 
+                : 'border-black hover:bg-white bg-industrial-bg'
             }
         `}
     >
         <input type="file" id="file-upload" className="hidden" accept="image/*" onChange={onChange}/>
         
-        <div className="space-y-4 pointer-events-none">
-            <div className={`mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-brick-blue to-blue-400 shadow-plastic flex items-center justify-center text-white text-3xl font-bold transition-transform ${isDragActive ? 'rotate-12' : ''}`}>
+        <div className="space-y-4 pointer-events-none uppercase font-bold tracking-tighter">
+            <div className={`mx-auto w-12 h-12 border-[3px] border-black flex items-center justify-center text-3xl transition-transform ${isDragActive ? 'rotate-90 bg-industrial-accent text-white' : 'bg-white text-black'}`}>
                +
             </div>
-            <h2 className="text-xl font-bold text-slate-700">Build Your Mosaic</h2>
-            <p className="text-slate-500">Drag a photo here or click to open the kit.</p>
+            <h2 className="text-xl">INPUT SOURCE</h2>
+            <p className="text-sm opacity-60">[ DRAG DROP / CLICK ]</p>
         </div>
     </div>
   );

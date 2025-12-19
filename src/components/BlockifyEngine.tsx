@@ -98,14 +98,14 @@ export const BlockifyEngine = ({ image, blockSize }: BlockifyEngineProps) => {
   if (!image) return null;
 
   return (
-    <div className="relative shadow-xl rounded-lg overflow-hidden bg-white mx-auto border-4 border-slate-200" style={{ maxWidth: '100%', width: 'fit-content' }}>
+    <div className="relative overflow-hidden bg-white mx-auto w-fit max-w-full">
         <canvas 
             ref={canvasRef}
             className="block max-w-full h-auto"
         />
         {isProcessing && (
             <div className="absolute inset-0 bg-white/50 flex items-center justify-center backdrop-blur-sm">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-brick-blue"></div>
+                <div className="w-12 h-12 border-4 border-industrial-accent border-t-transparent animate-spin"></div>
             </div>
         )}
     </div>

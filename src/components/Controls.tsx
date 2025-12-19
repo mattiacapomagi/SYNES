@@ -8,13 +8,13 @@ interface ControlsProps {
 
 export const Controls = ({ blockSize, setBlockSize, onDownload }: ControlsProps) => {
   return (
-    <div className="bg-white rounded-2xl shadow-lg border-2 border-slate-100 p-6 flex flex-col md:flex-row gap-6 items-center justify-between">
+    <div className="bg-white border-[3px] border-black p-6 flex flex-col md:flex-row gap-6 items-center justify-between shadow-brutal">
         
         {/* Slider Section */}
-        <div className="flex-1 w-full space-y-2">
-            <div className="flex justify-between font-bold text-slate-700 text-sm uppercase tracking-wider">
-                <span>Block Size</span>
-                <span className="bg-slate-100 px-2 rounded text-brick-blue">{blockSize}px</span>
+        <div className="flex-1 w-full space-y-4">
+            <div className="flex justify-between font-bold text-black text-xs uppercase tracking-tighter">
+                <span>BLOCK DENSITY</span>
+                <span className="bg-black text-white px-1">PX {blockSize}</span>
             </div>
             <div className="relative h-8 flex items-center">
                 <input 
@@ -26,9 +26,9 @@ export const Controls = ({ blockSize, setBlockSize, onDownload }: ControlsProps)
                     className="w-full"
                 />
             </div>
-            <div className="flex justify-between text-xs text-slate-400 font-medium">
-                <span>Detailed (5px)</span>
-                <span>Abstract (80px)</span>
+            <div className="flex justify-between text-[10px] text-black font-bold uppercase">
+                <span>[ HIGH RES ]</span>
+                <span>[ LOW RES ]</span>
             </div>
         </div>
 
@@ -36,9 +36,9 @@ export const Controls = ({ blockSize, setBlockSize, onDownload }: ControlsProps)
         <div className="w-full md:w-auto">
             <button
                 onClick={onDownload}
-                className="w-full md:w-auto px-8 py-3 bg-brick-green hover:bg-emerald-500 text-white font-bold rounded-xl shadow-plastic hover:shadow-plastic-active translate-y-0 hover:translate-y-1 transition-all active:shadow-none active:translate-y-1"
+                className="w-full md:w-auto px-8 py-4 bg-industrial-accent hover:bg-black text-white font-bold border-[3px] border-black shadow-brutal hover:shadow-brutal-hover active:shadow-brutal-active hover:translate-x-[2px] hover:translate-y-[2px] transition-all uppercase tracking-tight text-sm"
             >
-                Export Mosaic PNG
+                EXECUTE EXPORT
             </button>
         </div>
 

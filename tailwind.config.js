@@ -7,23 +7,26 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Rubik', 'sans-serif'], // Default font
+        mono: ['"PPMonumentNormal"', 'sans-serif'], // User requested this as site font
+        sans: ['"PPMonumentNormal"', 'sans-serif'], 
       },
       colors: {
-        // Playful Palette
-        brick: {
-          red: '#EF4444',
-          blue: '#3B82F6',
-          yellow: '#F59E0B',
-          green: '#10B981',
-          slate: '#475569',
+        // Industrial Palette
+        industrial: {
+          bg: '#E5E5E5',       // Concrete Gray
+          surface: '#FFFFFF',   // Stark White
+          text: '#000000',      // Ink Black
+          accent: '#FF0000',    // Alert Red
+          border: '#000000',    // Structural Black
         },
-        surface: '#F8FAFC',
       },
       boxShadow: {
-        'plastic': '0 4px 0 0 rgba(0,0,0,0.1)', // Tactile "plastic" depth
-        'plastic-active': '0 1px 0 0 rgba(0,0,0,0.1)',
-        'tray': 'inset 0 2px 4px 0 rgba(0,0,0,0.05)',
+        'brutal': '4px 4px 0px 0px #000000', // Hard edge shadow
+        'brutal-hover': '2px 2px 0px 0px #000000',
+        'brutal-active': '0px 0px 0px 0px #000000',
+      },
+      scale: {
+        '101': '1.01',
       }
     },
   },

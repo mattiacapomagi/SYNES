@@ -2,12 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Utilities if needed */
-body {
-  background-color: #f8fafc; /* Slate-50 */
+@font-face {
+  font-family: "PPMonumentNormal";
+  src: url("./fonts/PPMonumentNormal-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
 }
 
-/* Range Slider Styling */
+@font-face {
+  font-family: "PPMonumentNormal";
+  src: url("./fonts/PPMonumentNormal-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "PPMonumentNormal";
+  src: url("./fonts/PPMonumentNormal-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+}
+
+body {
+  background-color: #e5e5e5;
+  font-family: "PPMonumentNormal", sans-serif;
+}
+
+/* Custom Range Slider - Raw Industrial Style */
 input[type="range"] {
   -webkit-appearance: none;
   background: transparent;
@@ -15,24 +36,18 @@ input[type="range"] {
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 24px;
-  width: 24px;
-  border-radius: 50%;
-  background: #3b82f6;
-  margin-top: -10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
+  height: 20px;
+  width: 10px; /* Rectangular thumb */
+  background: #ff0000;
+  border: 2px solid black;
+  margin-top: -8px;
+  cursor: crosshair;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
   width: 100%;
-  height: 6px;
-  cursor: pointer;
-  background: #e2e8f0;
-  border-radius: 999px;
+  height: 4px;
+  cursor: crosshair;
+  background: #000000;
+  border: 0;
 }

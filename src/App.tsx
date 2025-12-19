@@ -20,24 +20,18 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20 bg-industrial-bg font-mono selection:bg-industrial-accent selection:text-white">
       {/* Header */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-          <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-brick-red rounded-md shadow-plastic flex items-center justify-center">
-                      <div className="w-4 h-4 bg-red-400 rounded-full opacity-50"></div>
-                  </div>
-                  <span className="text-xl font-black tracking-tight text-slate-800">BRICKLAB</span>
-              </div>
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Mosaic Workshop
+      <nav className="bg-white border-b-[3px] border-black sticky top-0 z-50">
+          <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                  <img src="/bricklab-logo.svg" alt="BRICKLAB LOGO" className="h-12 w-auto" />
               </div>
           </div>
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-6 pt-10 space-y-10">
+      <main className="max-w-6xl mx-auto px-6 pt-12 space-y-12">
           
           {/* 1. Upload Section */}
           <section className={sourceImage ? '' : 'py-20'}>
@@ -46,17 +40,15 @@ function App() {
                        <UploadZone onUpload={setSourceImage} />
                    </div>
                ) : (
-                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-                       <div className="md:col-span-1">
-                           <button 
-                                onClick={() => setSourceImage(null)}
-                                className="text-xs font-bold text-slate-400 hover:text-brick-red bg-slate-50 px-3 py-2 rounded-lg transition-colors uppercase tracking-wider"
-                           >
-                               ← Valid New Image
-                           </button>
-                       </div>
-                       <div className="md:col-span-3 text-right">
-                           <p className="text-sm font-bold text-slate-600">Working on your masterpiece</p>
+                   <div className="flex items-center justify-between bg-black p-4 border-[3px] border-black text-white">
+                       <button 
+                            onClick={() => setSourceImage(null)}
+                            className="text-xs font-bold hover:text-industrial-accent border-b border-white hover:border-industrial-accent transition-colors uppercase tracking-widest"
+                       >
+                           ← RESET SOURCE
+                       </button>
+                       <div className="text-xs font-mono opacity-50 uppercase">
+                           PROCESSING UNIT ACTIVE
                        </div>
                    </div>
                )}
@@ -64,24 +56,31 @@ function App() {
 
           {/* 2. Workspace */}
           {sourceImage && (
-            <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-8 animate-fade-in-up">
                 
+                {/* Canvas Engine */}
+                <div className="border-[3px] border-black bg-white shadow-brutal p-2">
+                    <BlockifyEngine 
+                        image={sourceImage}
+                        blockSize={blockSize}
+                    />
+                </div>
+
                 {/* Controls */}
                 <Controls 
                     blockSize={blockSize}
                     setBlockSize={setBlockSize}
                     onDownload={handleDownload}
                 />
-
-                {/* Canvas Engine */}
-                <BlockifyEngine 
-                    image={sourceImage}
-                    blockSize={blockSize}
-                />
             </div>
           )}
 
       </main>
+      
+      {/* Brutalist Footer */}
+      <footer className="fixed bottom-4 right-6 text-[10px] font-bold uppercase opacity-30 mix-blend-exclusion pointer-events-none">
+         CAPOMAGI IND 2025
+      </footer>
     </div>
   )
 }
