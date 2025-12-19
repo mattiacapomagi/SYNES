@@ -41,12 +41,12 @@ function App() {
                        <UploadZone onUpload={setSourceImage} />
                    </div>
                ) : (
-                   <div className="flex items-center justify-between bg-black p-4 border-[3px] border-black text-white">
+                   <div>
                        <button 
                             onClick={() => setSourceImage(null)}
-                            className="text-xs font-bold hover:text-industrial-accent border-b border-white hover:border-industrial-accent transition-colors uppercase tracking-widest"
+                            className="bg-black text-white text-xs font-bold px-3 py-1 hover:bg-industrial-accent transition-colors uppercase tracking-widest border-[2px] border-black"
                        >
-                           ← RESET SOURCE
+                           ← RESET
                        </button>
                    </div>
                )}
@@ -77,7 +77,7 @@ function App() {
       
       {/* Brutalist Footer */}
       <footer className="fixed bottom-4 right-6 text-[10px] font-bold uppercase opacity-30 mix-blend-exclusion pointer-events-none">
-         CAPOMAGI IND 2025
+         Mattia Capomagi 2025
       </footer>
     </div>
   )
