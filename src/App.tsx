@@ -395,6 +395,12 @@ function App() {
         {/* Spacer for fixed footer */}
         <div className="h-24"></div>
       </main>
+      
+      {/* Footer */}
+      <footer className="w-full text-center py-6 text-[10px] md:text-xs font-mono uppercase opacity-50 space-y-2 pb-24 md:pb-6">
+          <p>© {new Date().getFullYear()} Mattia Capomagi</p>
+      </footer>
+
       </div>
     </div>
   );
