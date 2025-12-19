@@ -69,9 +69,9 @@ export const UploadZone = ({ onUpload }: UploadZoneProps) => {
                +
             </div>
             <h2 className="text-xl">INPUT SOURCE</h2>
-            <div className="text-sm opacity-60 space-y-1">
-                <p>[ JPG PNG GIF WEBP HEIC TIFF ]</p>
-                <p className="text-[10px] opacity-50">DRAG DROP / CLICK</p>
+            <div className="space-y-1">
+                <p className="text-sm font-bold">[ DRAG ND DROP / CLICK ]</p>
+                <p className="text-[10px] opacity-50">JPG / PNG / GIF / WEBP / HEIC / TIFF</p>
             </div>
         </div>
     </div>
