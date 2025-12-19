@@ -98,10 +98,11 @@ export const BlockifyEngine = ({ image, blockSize }: BlockifyEngineProps) => {
   if (!image) return null;
 
   return (
-    <div className="relative overflow-hidden bg-white mx-auto w-fit max-w-full">
+    <div className="relative flex items-center justify-center mx-auto" style={{ width: 'fit-content', maxHeight: '100%', maxWidth: '100%' }}>
         <canvas 
             ref={canvasRef}
-            className="block max-w-full h-auto"
+            className="block object-contain"
+            style={{ maxWidth: '100%', maxHeight: '75vh' }}
         />
         {isProcessing && (
             <div className="absolute inset-0 bg-white/50 flex items-center justify-center backdrop-blur-sm">

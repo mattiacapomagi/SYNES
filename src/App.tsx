@@ -58,7 +58,7 @@ function App() {
                 
                 {/* Canvas Engine (Left/Top) */}
                 <div className="flex-1 border-[3px] border-black bg-white shadow-brutal p-2 overflow-hidden flex items-center justify-center bg-dots-pattern">
-                    <div className="max-h-[75vh] w-full flex items-center justify-center overflow-auto">
+                    <div className="w-full flex items-center justify-center">
                         <BlockifyEngine 
                             image={sourceImage}
                             blockSize={blockSize}
