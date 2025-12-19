@@ -1,5 +1,6 @@
 {
   "name": "BRICKLAB",
+  "description": "A high-precision, brutalist mosaic generator that transforms images into vector-ready brick layouts for creative professionals.",
   "private": true,
   "version": "0.0.0",
   "type": "module",
