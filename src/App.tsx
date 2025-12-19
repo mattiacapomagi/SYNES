@@ -205,13 +205,18 @@ function App() {
       {/* Header */}
       <nav className="bg-white border-b-[3px] border-black sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
-              <div className="flex items-center gap-2 md:gap-4">
+              <a href="/" className="flex items-center gap-2 md:gap-4 hover:opacity-80 transition-opacity">
                   <img src={bricklabLogo} alt="BRICKLAB LOGO" className="h-8 md:h-12 w-auto" />
                   <span className="text-lg md:text-3xl font-bold text-industrial-accent uppercase tracking-tighter">BRICKLAB</span>
-              </div>
-              <div className="text-[10px] md:text-sm font-normal uppercase tracking-widest opacity-50 flex items-center h-full whitespace-nowrap">
+              </a>
+              <a 
+                  href="https://mattiacapomagi.figma.site/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[10px] md:text-sm font-normal uppercase tracking-widest opacity-50 flex items-center h-full whitespace-nowrap hover:opacity-100 transition-opacity"
+              >
                   Mattia Capomagi 2025
-              </div>
+              </a>
           </div>
       </nav>
 
