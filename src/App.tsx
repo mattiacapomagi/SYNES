@@ -100,7 +100,7 @@ function App() {
       const blob = new Blob([svgString], { type: 'image/svg+xml' });
       const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       const link = document.createElement('a');
-      link.download = `BRICKLAB_EXPORT_${dateStr}.png`;
+      link.download = `BRICKLAB_EXPORT_${dateStr}.svg`;
       link.href = URL.createObjectURL(blob);
       link.click();
   };
